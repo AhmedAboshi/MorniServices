@@ -2,10 +2,9 @@
 include('../include/connected.php');
 
 /* =========================
-   🔥 حذف مباشر (بدون صفحة ثانية)
+   🗑️ حذف مباشر
 ========================= */
 if(isset($_GET['delete'])){
-
     $id = (int) $_GET['delete'];
 
     mysqli_query($con, "DELETE FROM orders WHERE id=$id");
@@ -15,7 +14,7 @@ if(isset($_GET['delete'])){
 }
 
 /* =========================
-   🔍 فلاتر البحث
+   🔍 بحث + فلتر
 ========================= */
 $search = mysqli_real_escape_string($con, $_GET['search'] ?? '');
 $status = mysqli_real_escape_string($con, $_GET['status'] ?? '');
@@ -34,7 +33,7 @@ if ($status != '') {
 }
 
 /* =========================
-   📦 جلب الطلبات
+   📦 جلب البيانات
 ========================= */
 $query = "SELECT * FROM orders $where ORDER BY id DESC";
 $result = mysqli_query($con, $query);
@@ -46,7 +45,7 @@ $result = mysqli_query($con, $query);
 
 <h3>🚚 لوحة إدارة الطلبات</h3>
 
-<!-- 🔍 بحث -->
+<!-- 🔍 البحث -->
 <form method="GET" class="row mb-3">
 
 <div class="col-md-6">
@@ -71,7 +70,7 @@ value="<?= htmlspecialchars($search) ?>">
 
 </form>
 
-<!-- 📋 جدول الطلبات -->
+<!-- 📋 الجدول -->
 <table class="table table-bordered table-hover text-center">
 
 <tr class="table-dark">
@@ -88,6 +87,26 @@ value="<?= htmlspecialchars($search) ?>">
 
 <?php while($row = mysqli_fetch_assoc($result)){ ?>
 
+<?php
+$status = $row['status'];
+
+$statusClass = match($status) {
+    'pending'   => 'warning',
+    'assigned'  => 'primary',
+    'done'      => 'success',
+    'cancelled' => 'danger',
+    default     => 'secondary'
+};
+
+$statusText = match($status) {
+    'pending'   => '⏳ قيد الانتظار',
+    'assigned'  => '🚚 تم التعيين',
+    'done'      => '✅ مكتمل',
+    'cancelled' => '❌ ملغي',
+    default     => $status
+};
+?>
+
 <tr>
 
 <td><?= $row['id'] ?></td>
@@ -98,8 +117,8 @@ value="<?= htmlspecialchars($search) ?>">
 <td><?= $row['price'] ?> ريال</td>
 
 <td>
-<span class="badge bg-secondary">
-<?= $row['status'] ?>
+<span class="badge bg-<?= $statusClass ?>">
+<?= $statusText ?>
 </span>
 </td>
 
@@ -117,6 +136,7 @@ value="<?= htmlspecialchars($search) ?>">
 تعديل
 </a>
 
+<!-- 🗑️ حذف -->
 <a href="ordersview.php?delete=<?= $row['id'] ?>" 
 class="btn btn-danger btn-sm"
 onclick="return confirm('هل أنت متأكد من الحذف؟')">
