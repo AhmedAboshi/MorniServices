@@ -1,0 +1,102 @@
+body{
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    background-color: #f5f6f8;
+    margin: 0;
+    padding: 20px;
+}
+h1{
+    text-align: center;
+    color: black;
+    margin-bottom: 20px;
+}
+.container{
+    max-width: 900px;
+    margin: auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px rgba(0, 0, 0, 0.1);
+}
+.display-order{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 15px;
+    background-color: #ffeedd;
+    border-radius: 8px;
+    justify-content: center;
+}
+.product-box{
+    flex: 0 1 100px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow:  0 4x 10px rgba(0,0,0, 08);
+    transition: all 0.3s ease;
+}
+.product-box:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.product-box img{
+    width: 60px;
+    height: 50px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+.product-box p{
+    font-size: 12px;
+    margin: 2px;
+    color: black;
+    font-weight: bold;
+}
+.product-box i{
+    color: #007bff;
+    font-weight: bold;
+}
+.total-container{
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 15px 0;
+    color: green;
+}
+h5{
+    text-align: center;
+    font-size: 20px;
+}
+.input-group{
+    margin-bottom: 15px;
+}
+.input{
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+label{
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+button{
+    width: 100%;
+    padding: 12px;
+    background-color: #3206aaff;
+    color: #fff;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+button:hover{
+    background-color: rgba(156,126, 238);
+    color: black;
+}
+select, input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+}

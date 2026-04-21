@@ -1,0 +1,166 @@
+*{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-decoration: none;
+}
+body{
+    background-color: #fff;
+}
+
+.sidebar_container{
+    display: flex;
+    position: relative;
+}
+.sidebar_container .sidebar{
+    background-color: #ccc;
+    position: fixed;
+    right: 20px;
+    width: 280px;
+    height: 100%;
+}
+.sidebar_container .sidebar h1{
+    color: aqua;
+    text-align: center;
+    margin-top: 10px;
+}
+.sidebar_container .sidebar ul li{
+    font-size: 25px;
+    padding: 10px;
+    border-bottom: 1px solid #fff;
+    float: right;
+}
+.sidebar_container .sidebar ul li i{
+    color: blue;
+    margin-left: 30px;
+}
+.sidebar_container .sidebar ul li a{
+    display: block;
+    color: black;
+    padding: 10px;
+}
+.sidebar_container .sidebar ul li a:hover{
+    background-color: aqua;
+    color: #fff;
+}
+.sidebar_container .content_sec{
+ width: 100px;
+ margin-left: 44PX;
+ padding: 20px;
+}
+.sidebar_container .content_sec label{
+    margin-bottom: 10px;
+    font-size: 28px;
+    text-align: left;
+}
+.sidebar_container .content_sec input{
+    width: 1000px;
+    padding: 20px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+}
+.sidebar_container .content_sec .add{
+background-color: #007bff;
+border: none;
+padding: 15px 30px;
+color: white;
+font-size: 10px;
+text-align: center;
+cursor: pointer;
+border-radius: 4px;
+}
+.sidebar_container .content_sec .add:hover{
+    background-color: #0056b3;
+}
+.sidebar_container table{
+    background-color: #fff;
+    width: 1000px;
+    border-collapse: collapse;
+    float: center;
+}
+.sidebar_container table th,td{
+    text-align: center;
+    font-size: 22px;
+    padding: 8px;
+    border: 1px solid #fff;
+    border: 1px solid black;
+}
+.sidebar_container table th{
+    background-color: #007bff;
+}
+.sidebar_container table .delete{
+color: white;
+font-size: 18px;
+background-color: rgb(182,48,48);
+border: 1px solid red;
+padding: 8px 18px;
+border-radius: 2px;
+margin-right: 5px;
+}
+.sidebar_container table .delete:hover{
+    background-color: rgb(37, 1, 1);
+    color: white;
+}
+/* start product css */
+.form_product{
+    width: 70%;
+    margin: 5px;
+    box-shadow: 0 5px 10px rgp(0,0,0,1);
+}
+h1{
+    padding: 10px;
+}
+label{
+    display: block;
+    margin-bottom: 5px;
+    font-size: 25px;
+}
+input{
+    width: 80%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.button{
+    width: 90%;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #007bff;
+    border: none;
+    font-size: 28px;
+}
+button:hover{
+    background-color: #0056b3;
+    color: white;
+}
+
+
+
+/* end product css */
+#form_control{
+    width: 80%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.update{
+    color: white;
+    font-size: 18px;
+    background-color: rgb(3, 228, 100);
+    padding: 8px 18px;
+    border-radius: 2px;
+    border: 1px solid rgb(154, 240, 182);
+    margin-right: 5px;
+}
+.update:hover{
+    background-color: rgb(8, 94, 23);
+    color: white;
+}
+/* .sidebar_container table th,td img {
+    width: 80px;
+    height: 80px;
+} */
