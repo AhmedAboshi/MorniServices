@@ -58,6 +58,7 @@ a.btn{
 <tr>
     <th>#</th>
     <th>رقم الفاتورة</th>
+    <th>تاريخ الفاتورة</th>
     <th>العميل</th>
     <th>الهاتف</th>
     <th>الإجمالي</th>
@@ -70,6 +71,7 @@ a.btn{
 <tr>
     <td><?= $row['id'] ?></td>
     <td><?= $row['invoice_number'] ?></td>
+    <td><?= $row['created_at'] ?></td>
     <td><?= $row['full_name'] ?></td>
     <td><?= $row['phone'] ?></td>
     <td><?= number_format($row['total_with_vat'],2) ?> $</td>
