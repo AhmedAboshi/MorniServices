@@ -43,6 +43,7 @@ $total_with_vat = $total + $vat;
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+
 <title>تفاصيل الفاتورة</title>
 
 <style>
@@ -72,10 +73,25 @@ th,td{border:1px solid #ccc;padding:8px;text-align:center}
 <body>
 
 <div class="box">
+<!-- 🔝 أزرار -->
+<div class="top-actions">
+ 
+ <div style="text-align:center;">
+    <img src="../img/logo.jpg" width="80" alt="Logo">
+</div>
+    <button onclick="window.print()" class="btn print">
+        🖨️ طباعة
+    </button>
 
+    <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+       
+    </div>
+
+</div>
 <h2>🧾 تفاصيل الفاتورة</h2>
 
 <p>رقم الفاتورة: <?= $invoice['invoice_number'] ?></p>
+<p>تاريخ الفاتورة: <?= $invoice['created_at'] ?></p>
 <p>العميل: <?= $order['full_name'] ?></p>
 <p>الهاتف: <?= $order['phone'] ?></p>
 <p>نوع الطلب: <?= $order_type ?></p>
@@ -113,9 +129,9 @@ th,td{border:1px solid #ccc;padding:8px;text-align:center}
 <?php } ?>
 
 <div class="total">
-<p>المجموع: <?= number_format($total,2) ?> $</p>
-<p>VAT: <?= number_format($vat,2) ?> $</p>
-<h3>الإجمالي: <?= number_format($total_with_vat,2) ?> $</h3>
+<p>المجموع: <?= number_format($total,2) ?> ريال</p>
+<p>VAT: <?= number_format($vat,2) ?> ريال</p>
+<h3>الإجمالي: <?= number_format($total_with_vat,2) ?> ريال</h3>
 </div>
 
 <a href="admin_invoices.php" class="btn">⬅ رجوع</a>
