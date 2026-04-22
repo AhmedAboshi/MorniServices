@@ -50,7 +50,7 @@ while($row=mysqli_fetch_assoc($result)){
         </div>
         <!----price---->
         <div class="product_price">
-            <a href="detalis.php?id=<?php echo $row['id']?>"><?PHP echo $row['proprice'];?>$ &nbsp; السعر</a>
+            <a href="detalis.php?id=<?php echo $row['id']?>"><?PHP echo $row['proprice'];?>ريال &nbsp; السعر</a>
         </div>
         <!----description---->
         <div class="product_description">
