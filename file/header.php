@@ -96,7 +96,10 @@ if (session_status() === PHP_SESSION_NONE) {
         }
         ?>
 
+        
+
     </ul>
+    
     <div class="cart">
     <ul>
         <li><a href="user/logout.php"><i class="fa-solid fa-user"></i></a></li>
@@ -134,6 +137,7 @@ if ($user_id > 0) {
     </ul>
 </div>
 
+
 </div>
 
 
@@ -141,7 +145,6 @@ if ($user_id > 0) {
 
 </body>
 </html>
-
 
 
 

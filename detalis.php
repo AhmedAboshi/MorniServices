@@ -23,13 +23,11 @@ include('file/header.php');
         border-radius:8px;  
     }
     .product_img{
-        float: left;
-        display:flex;
-        flex-wrap: wrap;
-        margin-bottom:20px;
+         width:50%;
+    height:400px;
     }
     .product_img img{
-        width: 400px;
+        width: 350px;
         height: 400px;
         margin-left:40px;
         margin-bottom:20px;
@@ -38,7 +36,7 @@ include('file/header.php');
         float: right;
         width: 400px;
         height: 400px;
-        text-align: center;
+        text-align: right;
         font-size:20px;
         margin-right:50px;
         padding:10px 10px;

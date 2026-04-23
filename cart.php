@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 if(!isset($_SESSION['user_id'])){
     echo '<script>
     alert("يرجى تسجيل الدخول أولاً لإضافة الخدمة إلى خدماتي");
@@ -24,11 +23,11 @@ include('file/header.php');
 @$add=$_POST['add'];
 if(isset($_POST['add'])){
     @$ID =$_POST['id'];
-    $productname =$_POST['h_name'];
-    $productprice =$_POST['h_price'];
-    $productimg =$_POST['h_img'];
-    $productquantity =$_POST['quantity'];
-    @$product_id=$_POST['product_id'];
+    $productname   = $_POST['name']  ?? '';
+    $productprice  = $_POST['price'] ?? '';
+    $productimg    = $_POST['img']   ?? '';
+    $productquantity = $_POST['quantity'] ?? 1;
+    $product_id    = $_POST['product_id'] ?? 0;
     @$user_id = $_SESSION['user_id'];
 
     // التحقق ازا كانت الخدمة موجوده في قاعدة البايانات ام لا
@@ -245,7 +244,7 @@ if($result){
  <td><h3><?PHP echo number_format($row['quantity'] * $row['price'],2);?></h3></td>
     <!----start delete----->
  <td>
-  <form method="POST">
+  <form method="POST" action="cart.php">
   <input type="hidden" name="id" value="<?php echo $row['id'];?>">
   <button type="submit" name="delete_c" class="remove">حذف</button>
 </form>
@@ -254,7 +253,7 @@ if($result){
 
   <!----start uptate----->
  <td>
-  <form method="POST">
+  <form method="POST" action="cart.php">
   <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
 
   <input type="number" name="quantity" value="<?php echo $row['quantity']; ?>" min="1">
