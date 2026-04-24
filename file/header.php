@@ -4,9 +4,29 @@ $user ="root";
 $password ="";
 $dbNAME="morniservices";
 
-$con =mysqli_connect($host,$user,$password,$dbNAME);
+$con = mysqli_connect($host,$user,$password,$dbNAME);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+/* =========================
+   عدد الطلبات (FIX)
+========================= */
+
+$order_count = 0;
+
+if(isset($_SESSION['user_id'])){
+    $user_id = $_SESSION['user_id'];
+
+    $result = mysqli_query($con,
+        "SELECT COUNT(*) AS total FROM orders WHERE user_id = $user_id"
+    );
+
+    if($result){
+        $row = mysqli_fetch_assoc($result);
+        $order_count = $row['total'];
+    }
 }
 ?>
 
@@ -73,6 +93,22 @@ if (session_status() === PHP_SESSION_NONE) {
 
         </ul>
     </div>
+
+    <?php 
+
+    if(isset($_SESSION['user_id'])): ?>
+    
+    <?php if(isset($_SESSION['user_id'])): ?>
+    <a href="myorders.php" class="order-icon">
+    <i class="fa-solid fa-box"></i>
+طلباتي
+    <?php if($order_count > 0): ?>
+        <span class="badge"><?= $order_count ?></span>
+    <?php endif; ?>
+</a>
+<?php endif; ?>
+<?php endif; ?>
+
 </nav>
 <div class="last-post">
     <ul>
@@ -147,4 +183,5 @@ if ($user_id > 0) {
 </html>
 
 
-
+        
+        
