@@ -69,7 +69,7 @@ while($d = mysqli_fetch_assoc($drivers_result)){
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
 
@@ -91,6 +91,17 @@ body {
     display: flex;
     gap: 5px;
 }
+body[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+body[dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+}
+
+
 </style>
 
 </head>
@@ -99,9 +110,9 @@ body {
 
 <div class="container mt-4">
 
-<h3 class="mb-3">🚚 لوحة إدارة الطلبات</h3>
-<a href="?lang=ar" class="btn btn-primary btn-sm">العربية</a>
-<a href="?lang=en" class="btn btn-dark btn-sm">English</a>
+<h3 class="mb-3">🚚<?= __('orders') ?></h3>
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
 <?php if(isset($_GET['success'])): ?>
 <div class="alert alert-success">✅ تم التحديث بنجاح</div>
 <?php endif; ?>
@@ -111,23 +122,37 @@ body {
 
 <div class="col-md-6">
 <input type="text" name="search" class="form-control"
-placeholder="بحث بالاسم / الجوال / المدينة"
+placeholder="<?= __('search_placeholder') ?>"
 value="<?= htmlspecialchars($search) ?>">
 </div>
 
 <div class="col-md-3">
 <select name="status" class="form-select">
-<option value="">كل الحالات</option>
-<option value="pending"   <?= $filter_status=='pending'?'selected':'' ?>>قيد الانتظار</option>
-<option value="assigned"  <?= $filter_status=='assigned'?'selected':'' ?>>تم التعيين</option>
-<option value="done"      <?= $filter_status=='done'?'selected':'' ?>>مكتمل</option>
-<option value="cancelled" <?= $filter_status=='cancelled'?'selected':'' ?>>ملغي</option>
+
+<option value=""><?= __('all_status') ?></option>
+
+<option value="pending"   <?= $filter_status=='pending'?'selected':'' ?>>
+    <?= __('pending') ?>
+</option>
+
+<option value="assigned"  <?= $filter_status=='assigned'?'selected':'' ?>>
+    <?= __('assigned') ?>
+</option>
+
+<option value="done"      <?= $filter_status=='done'?'selected':'' ?>>
+    <?= __('done') ?>
+</option>
+
+<option value="cancelled" <?= $filter_status=='cancelled'?'selected':'' ?>>
+    <?= __('cancelled') ?>
+</option>
+
 </select>
 </div>
 
-<div class="col-md-3">
-<button class="btn btn-primary w-100">بحث</button>
-</div>
+<button class="btn btn-primary w-100">
+    🔍 <?= __('search') ?>
+</button>
 
 </form>
 
@@ -137,16 +162,16 @@ value="<?= htmlspecialchars($search) ?>">
 <thead class="table-dark">
 <tr>
 <th>#</th>
-<th>العميل</th>
-<th>الجوال</th>
-<th>من</th>
-<th>إلى</th>
-<th>السعر</th>
-<th>الحالة</th>
-<th>السائق</th>
-<th>التاريخ</th>
-<th>إجراءات</th>
-<th>تحديث</th>
+<th><?= __('customer') ?></th>
+<th><?= __('phone') ?></th>
+<th><?= __('from') ?></th>
+<th><?= __('to') ?></th>
+<th><?= __('price') ?></th>
+<th><?= __('status') ?></th>
+<th><?= __('driver') ?></th>
+<th><?= __('date') ?></th>
+<th><?= __('actions') ?></th>
+<th><?= __('update') ?></th>
 </tr>
 </thead>
 
@@ -165,10 +190,10 @@ $statusClass = match($status) {
 };
 
 $statusText = match($status) {
-    'pending'   => '⏳ انتظار',
-    'assigned'  => '🚚 معين',
-    'done'      => '✅ مكتمل',
-    'cancelled' => '❌ ملغي',
+    'pending'   => '⏳ ' . __('pending'),
+    'assigned'  => '🚚 ' . __('assigned'),
+    'done'      => '✅ ' . __('done'),
+    'cancelled' => '❌ ' . __('cancelled'),
     default     => $status
 };
 ?>
@@ -195,10 +220,20 @@ $statusText = match($status) {
 <td><?= $row['created_at'] ?></td>
 
 <td>
-<a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">تفاصيل</a>
-<a href="edit_order.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">تعديل</a>
+
+<a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">
+    <?= __('details') ?>
+</a>
+
+<a href="edit_order.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">
+    <?= __('edit') ?>
+</a>
+
 <a href="ordersview.php?delete=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
-onclick="return confirm('هل أنت متأكد؟')">حذف</a>
+onclick="return confirm('<?= __('confirm_delete') ?>')">
+    <?= __('delete') ?>
+</a>
+
 </td>
 
 <td>

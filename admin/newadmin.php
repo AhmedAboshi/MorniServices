@@ -1,8 +1,28 @@
+<?php
+include('../include/core.php');
+
+?>
+
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
+<?php $currentLang = $_SESSION['lang'] ?? 'ar'; ?>
+
+<div class="lang-box">
+
+    <a href="?<?= http_build_query(array_merge($_GET, ['lang'=>'ar'])) ?>"
+       class="lang-btn <?= $currentLang=='ar'?'active':'' ?>">
+        🇸🇦 عربي
+    </a>
+
+    <a href="?<?= http_build_query(array_merge($_GET, ['lang'=>'en'])) ?>"
+       class="lang-btn <?= $currentLang=='en'?'active':'' ?>">
+        🇬🇧 English
+    </a>
+
+</div>
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم</title>
+    <title> <?= __('Control panel') ?></title>
     
     <link rel="stylesheet" href="style.css">
 </head>
@@ -77,90 +97,140 @@ li a i {
 <body>
 
 <div class="container">
-    <h1>لوحة التحكم</h1>
+    <h1><?= __('Control panel') ?></h1>
        
     <div class="cards">
      
         <div class="card">
-            <li><a href="../index.php" target_blank>الصفحة الرئيسية<i class="fa-solid fa-house"></i></a></li>
+            <li><a href="../index.php" target_blank><?= __('home') ?><i class="fa-solid fa-house"></i></a></li>
             
             
         </div>
 
-        <div class="card">
-            
-            <li><a href="sectionadmin.php" target_blank> ادارة اقسام الموقع<i class="fa-solid fa-house"></i></a></li>
-        </div>
-
-        <div class="card">
-            <li><a href="services.php" target_blank>خدمات الشركه<i class="fa fa-truck" aria-hidden="true"></i></a></li>
-            
-            
-        </div>
-
-        <div class="card">
-            <li><a href="addproduct.php" target_blank>اضافة خدمة<i class="fa-solid fa-folder-plus"></i></a></li>
-            
-        </div>
- <div class="card">
-            <li><a href="userview.php" target_blank>معلومات العملاء<i class="fa-solid fa-folder-plus"></i></a></li>
-        </div>
-<div class="card">
-            
-<li><a href="ordersview.php">
-عرض الطلب
-</a></li>
-            
-        </div>
-        <div class="card">
-            <li><a href="fleet.php" target_blank>مركبات الشركه</a></li>
-        </div>
-
-<div class="card">
-            <li><a href="addfleet.php" target_blank>اضافة مركبة</a></li>
-        </div>
-
-<div class="card">
-            <li><a href="addadmin.php" target_blank>اضافة مستخدم</a></li>
-        </div>
-
-        
-        <div class="card">
-            
-<li><a href="driversview.php" target_blank>معلومات المزودين</a></li>
-            
-        </div>
-
-        <div class="card">
-            
-            <li><a href="drivers.php" target_blank>اضافة مزود</a></li>
-        </div>
-        <div class="card">
-            <li><a href="maintenanceview.php" target_blank>صيانات مركبات</a></li>
-        </div>
-        <div class="card">
-             <li><a href="maintenance.php" target_blank>اضافة صيانة مركبة</a></li>
-        </div>
-
-<div class="card">
-             <li><a href="tire.php" target_blank>ادارات الاطارات</a></li>
-        </div>
-
-        <div class="card">
-             <li><a href="oile.php" target_blank>مراقبة تغير الزيت</a></li>
-        </div>
-
-        <div class="card">
-                        <li><a href="report_dashboard.php" target_blank>لوحة تحكم التقارير</a></li>
-
-        </div>
-        <div class="card">
-               <li><a href="logout.php" target_blank> تسجيل الخروج </a></li>
-
-        </div>
-    </div>
+      <div class="card">
+    <li>
+        <a href="sectionadmin.php" target="_blank">
+            🏠 <?= __('sections') ?>
+        </a>
+    </li>
 </div>
 
-</body>
-</html>
+<div class="card">
+    <li>
+        <a href="services.php" target="_blank">
+            🚚 <?= __('company_services') ?>
+        </a>
+    </li>
+</div>
 
+<div class="card">
+    <li>
+        <a href="addproduct.php" target="_blank">
+            ➕ 📦 <?= __('add_service') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="userview.php" target="_blank">
+            👤 <?= __('customers_info') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="ordersview.php">
+            📋 <?= __('view_orders') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="fleet.php" target="_blank">
+            🚗 <?= __('company_fleet') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="addfleet.php" target="_blank">
+            ➕ 🚙 <?= __('add_vehicle') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="addadmin.php" target="_blank">
+            👨‍💼 <?= __('add_user') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="driversview.php" target="_blank">
+            🚛 <?= __('drivers_info') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="drivers.php" target="_blank">
+            ➕ 🚚 <?= __('add_driver') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="maintenanceview.php" target="_blank">
+            🔧 <?= __('maintenance_records') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="maintenance.php" target="_blank">
+            ➕ 🛠️ <?= __('add_maintenance') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="tire.php" target="_blank">
+            🛞 <?= __('tires_management') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="oile.php" target="_blank">
+            🛢️ <?= __('oil_monitoring') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="report_dashboard.php" target="_blank">
+            📊 <?= __('reports_dashboard') ?>
+        </a>
+    </li>
+</div>
+
+<div class="card">
+    <li>
+        <a href="logout.php" target="_blank">
+            🚪 <?= __('logout') ?>
+        </a>
+    </li>
+</div>

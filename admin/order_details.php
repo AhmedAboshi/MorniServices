@@ -1,10 +1,11 @@
 <?php
+include('../include/core.php');
 include('../include/connected.php');
 
 $order_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if(!$order_id){
-    die("❌ لا يوجد طلب");
+   die("❌ " . __('no_order'));
 }
 
 /* جلب الطلب */
@@ -12,7 +13,7 @@ $order = mysqli_query($con,"SELECT * FROM orders WHERE id='$order_id'");
 $data = mysqli_fetch_assoc($order);
 
 if(!$data){
-    die("❌ الطلب غير موجود");
+    die("❌ " . __('no_order'));
 }
 
 /* نوع الطلب */
@@ -36,10 +37,10 @@ if(isset($_POST['update_status'])){
 }
 ?>
 
-<h2>🧾 تفاصيل الطلب #<?= $order_id ?></h2>
+<h2>🧾 <?= __('order_details') ?> #<?= $order_id ?></h2>
 
-<p>👤 العميل: <?= $data['full_name'] ?></p>
-<p>📞 الهاتف: <?= $data['phone'] ?></p>
+<p>👤 <?= __('customer') ?>: <?= $data['full_name'] ?></p>
+<p>📞 <?= __('phone') ?>: <?= $data['phone'] ?></p>
 
 <hr>
 
@@ -48,19 +49,19 @@ if(isset($_POST['update_status'])){
 <!-- 🚚 طلب سطحة -->
 <div style="border:1px solid #ddd;padding:15px;border-radius:10px">
 
-<h3>🚚 طلب سطحة بين المدن</h3>
+<h3>🚚 <?= __('intercity_order') ?></h3>
 
-<p>📍 من: <?= $data['from_city'] ?></p>
-<p>📍 إلى: <?= $data['to_city'] ?></p>
+<p>📍 <?= __('from') ?>: <?= $data['from_city'] ?></p>
+<p>📍 <?= __('to') ?>: <?= $data['to_city'] ?></p>
 
-<p>🚗 نوع السطحة: <?= $data['car_type'] ?></p>
-<p>📏 المسافة: <?= $data['distance'] ?> كم</p>
-<p>💰 السعر: <?= $data['price'] ?> ريال</p>
+<p>🚗 <?= __('car_type') ?>: <?= $data['car_type'] ?></p>
+<p>📏 <?= __('distance') ?>: <?= $data['distance'] ?> <?= __('km') ?></p>
+<p>💰 <?= __('price') ?>: <?= $data['price'] ?> <?= __('currency') ?></p>
 
 <hr>
 
-<p>📍 التحميل: <?= $data['pickup_lat'] ?> , <?= $data['pickup_lng'] ?></p>
-<p>📍 التنزيل: <?= $data['delivery_lat'] ?> , <?= $data['delivery_lng'] ?></p>
+<p>📍 <?= __('pickup') ?>: <?= $data['pickup_lat'] ?> , <?= $data['pickup_lng'] ?></p>
+<p>📍 <?= __('delivery') ?>: <?= $data['delivery_lat'] ?> , <?= $data['delivery_lng'] ?></p>
 
 <!-- 🗺️ الخريطة -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -70,6 +71,8 @@ if(isset($_POST['update_status'])){
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+const txtPickup = "<?= __('pickup') ?>";
+const txtDelivery = "<?= __('delivery') ?>";
 
 let fromLat = <?= $data['pickup_lat'] ?? 0 ?>;
 let fromLng = <?= $data['pickup_lng'] ?? 0 ?>;
@@ -84,12 +87,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 if(fromLat && fromLng){
     L.marker([fromLat, fromLng]).addTo(map)
-    .bindPopup("📍 التحميل");
+    .bindPopup("📍 " + txtPickup);
 }
 
 if(toLat && toLng){
     L.marker([toLat, toLng]).addTo(map)
-    .bindPopup("📍 التنزيل");
+    .bindPopup("📍 " + txtDelivery);
 }
 
 if(fromLat && toLat){
@@ -119,21 +122,21 @@ $total = 0;
 
 <div style="border:1px solid #ddd;padding:15px;border-radius:10px">
 
-<h3>🛒 طلب منتجات</h3>
+<h3>🛒 <?= __('product_order') ?></h3>
 
-<p>🏠 العنوان: <?= $data['address'] ?></p>
-<p>🏙️ المدينة: <?= $data['city'] ?></p>
+<p>🏠 <?= __('address') ?>: <?= $data['address'] ?></p>
+<p>🏙️ <?= __('city') ?>: <?= $data['city'] ?></p>
 
 <hr>
 
 <table border="1" width="100%" cellpadding="5">
 
 <tr>
-<th>الصورة</th>
-<th>المنتج</th>
-<th>الكمية</th>
-<th>السعر</th>
-<th>الإجمالي</th>
+<th>🖼️ <?= __('image') ?></th>
+<th>📦 <?= __('product') ?></th>
+<th>🔢 <?= __('quantity') ?></th>
+<th>💰 <?= __('price') ?></th>
+<th>🧾 <?= __('total') ?></th>
 </tr>
 
 <?php while($row = mysqli_fetch_assoc($items)){
@@ -161,7 +164,7 @@ $total += $sub;
 <?php } ?>
 
 <tr>
-<td colspan="4"><b>الإجمالي</b></td>
+<td colspan="4"><b>💰 <?= __('total') ?></b></td>
 <td><b><?= $total ?></b></td>
 </tr>
 
@@ -174,17 +177,31 @@ $total += $sub;
 <hr>
 
 <!-- 🔄 تحديث الحالة -->
-<h3>🔄 تحديث حالة الطلب</h3>
+<h3>🔄 <?= __('update_status') ?></h3>
 
 <form method="POST">
 
 <select name="status" style="width:100%;padding:10px">
 
-<option value="pending" <?= $data['status']=='pending'?'selected':'' ?>>⏳ قيد الانتظار</option>
-<option value="assigned" <?= $data['status']=='assigned'?'selected':'' ?>>🚚 تم التعيين</option>
-<option value="on_the_way" <?= $data['status']=='on_the_way'?'selected':'' ?>>🚗 في الطريق</option>
-<option value="done" <?= $data['status']=='done'?'selected':'' ?>>✅ مكتمل</option>
-<option value="cancelled" <?= $data['status']=='cancelled'?'selected':'' ?>>❌ ملغي</option>
+<option value="pending" <?= $data['status']=='pending'?'selected':'' ?>>
+    ⏳ <?= __('pending') ?>
+</option>
+
+<option value="assigned" <?= $data['status']=='assigned'?'selected':'' ?>>
+    🚚 <?= __('assigned') ?>
+</option>
+
+<option value="on_the_way" <?= $data['status']=='on_the_way'?'selected':'' ?>>
+    🚗 <?= __('on_the_way') ?>
+</option>
+
+<option value="done" <?= $data['status']=='done'?'selected':'' ?>>
+    ✅ <?= __('done') ?>
+</option>
+
+<option value="cancelled" <?= $data['status']=='cancelled'?'selected':'' ?>>
+    ❌ <?= __('cancelled') ?>
+</option>
 
 </select>
 
@@ -192,7 +209,7 @@ $total += $sub;
 
 <button type="submit" name="update_status"
 style="width:100%;padding:12px;background:green;color:white;border:none">
-تحديث الحالة
+<?= __('update_status') ?>
 </button>
 
 </form>
