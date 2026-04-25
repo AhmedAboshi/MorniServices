@@ -104,7 +104,7 @@ if (isset($_POST['orderadd'])) {
     /* =========================
        3️⃣ تحويل لصفحة النجاح
     ========================= */
-    header("Location: checkout_success.php?invoice_id=$invoice_id");
+    header("Location: invoice.php?id=$invoice_id");
     exit();
 }
 ?>

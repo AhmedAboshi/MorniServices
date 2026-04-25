@@ -1,112 +1,186 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
+
+/* 🔍 البحث */
+$search = $_GET['search'] ?? '';
+
+if ($search != '') {
+    $search_safe = mysqli_real_escape_string($con, $search);
+    $query = "SELECT * FROM product 
+              WHERE proname LIKE '%$search_safe%' 
+              OR prosection LIKE '%$search_safe%'";
+} else {
+    $query = "SELECT * FROM product";
+}
+
+$result = mysqli_query($con, $query);
+
+/* 🗑️ حذف */
+if (isset($_GET['id'])) {
+    $id = (int) $_GET['id'];
+    mysqli_query($con, "DELETE FROM product WHERE id=$id");
+    header("Location: services.php");
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة الخدمات</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body><br>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة الخدمات</title>
+
 <style>
-  /* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+/* 🔍 البحث */
+.search-box {
+    text-align: center;
+    margin: 20px;
+}
+
+.search-box input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 25px;
     border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
-.update{
+.search-box button {
+    padding: 10px 15px;
+    border: none;
+    background: #3498db;
     color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
+    border-radius: 20px;
+    cursor: pointer;
 }
-.update:hover{
-    background-color: rgb(8, 94, 23);
+
+/* 📊 الجدول */
+table {
+    width: 95%;
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+th {
+    background: #2c3e50;
     color: white;
-}
-  img {
-    width: 80px;
-    height: 80px;
-} 
-</style>
-<?php
-// start delete
-@$id =$_GET['id'];
-if(isset($id)){
-  $query ="DELETE FROM product WHERE id='$id'";
-  $delete = mysqli_query($con , $query);
-  if(isset($delete)){
-     echo '<script>alert ("تم حزف الخدمة بنجاح");</script>';
-
-  }else{
-    echo '<script>alert ("لم تتم حزف الخدمة");</script>';
-  }
+    padding: 12px;
 }
 
-// end delete
-?>
+td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
 
-   <div class ="sidebar_container">
-<table dir="rtl">
-  <tr>
-<td>رقم الخدمة</td>
-<td>صورة الخدمة</td>
-<td>عنوان الخدمة</td>
-<td>سعر الخدمة</td>
-<td>انواع الخدمة</td>
-<td>تفاصيل الخدمة</td>
-<td>توفر الخدمة</td>
-<td>حزف الخدمة</td>
-<td>تعديل الخدمة</td>
-  </tr> 
-  <?php
-$query="SELECT *  FROM product";
-$result =mysqli_query($con,$query);
-while ($row=mysqli_fetch_assoc($result)){
-?>
+tr:nth-child(even){
+    background: #f9f9f9;
+}
 
-  <tr>
-<th><?PHP echo $row['id'];?></th>
-<!------img---->
-<th><img src="../uploads/img//<?PHP echo $row['proimg'];?>";</th>
-<!------img---->
-<th> <?PHP echo $row['proname'];?></th>
-<th> <?PHP echo $row['proprice'];?></th>
-<th> <?PHP echo $row['prosection'];?></th>
-<th> <?PHP echo $row['prodescrip'];?></th>
-<th> <?PHP echo $row['prounv'];?></th>
+tr:hover{
+    background: #eef5ff;
+}
 
+/* 🖼️ الصور */
+img {
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    object-fit: cover;
+}
 
-    <td><a href="services.php? id= <?php echo $row['id']; ?>"><button type="submit" class="delete">حزف الخدمة</button></a></td>
-    <td><a href="update.php? id= <?php echo $row['id']; ?>"><button type="submit" class="update">تعديل الخدمة</button></a></td>
-
-  </tr> 
-  <!-- <button onclick="window.print()" style="
-    background-color: #4CAF50;
+/* 🔘 الأزرار */
+.delete {
+    background: #e74c3c;
     color: white;
-    padding: 10px 20px;
+    padding: 6px 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-">
-    🖨️ طباعة
-</button>
-</style> -->
-  </dive>
-<?php
 }
-?>
+
+.update {
+    background: #27ae60;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔍 البحث -->
+<div class="search-box">
+<form method="GET">
+<input type="text" name="search" placeholder="ابحث عن خدمة..." value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit">بحث</button>
+</form>
+</div>
+
+<!-- 📊 الجدول -->
+<table dir="rtl">
+<thead>
+<tr>
+<th>رقم</th>
+<th>الصورة</th>
+<th>الاسم</th>
+<th>السعر</th>
+<th>القسم</th>
+<th>التفاصيل</th>
+<th>الحالة</th>
+<th>حذف</th>
+<th>تعديل</th>
+</tr>
+</thead>
+
+<tbody>
+<?php while ($row = mysqli_fetch_assoc($result)) { ?>
+<tr>
+
+<td><?php echo $row['id']; ?></td>
+
+<td>
+<img src="../uploads/img/<?php echo $row['proimg']; ?>">
+</td>
+
+<td><?php echo $row['proname']; ?></td>
+<td><?php echo $row['proprice']; ?></td>
+<td><?php echo $row['prosection']; ?></td>
+<td><?php echo $row['prodescrip']; ?></td>
+<td><?php echo $row['prounv']; ?></td>
+
+<td>
+<a href="services.php?id=<?php echo $row['id']; ?>" 
+onclick="return confirm('هل أنت متأكد من الحذف؟')">
+<button class="delete">حذف</button>
+</a>
+</td>
+
+<td>
+<a href="update.php?id=<?php echo $row['id']; ?>">
+<button class="update">تعديل</button>
+</a>
+</td>
+
+</tr>
+<?php } ?>
+</tbody>
+
+</table>
+
 </body>
 </html>
+```

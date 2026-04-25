@@ -2,58 +2,103 @@
 session_start();
 include('../include/connected.php');
 
-// 🗑️ حذف
-if(isset($_GET['delete'])){
-    $id = $_GET['delete'];
-    mysqli_query($con, "DELETE FROM tires WHERE id = '$id'");
+/* =========================
+   🗑️ حذف آمن (POST)
+========================= */
+if(isset($_POST['delete_id'])){
+    $id = (int) $_POST['delete_id'];
+
+    $stmt = $con->prepare("DELETE FROM tires WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
     header("Location: tire.php");
     exit();
 }
 
-// ✏️ جلب بيانات التعديل
+/* =========================
+   ✏️ جلب بيانات التعديل
+========================= */
 $edit_row = null;
+
 if(isset($_GET['edit'])){
-    $id = $_GET['edit'];
-    $res = mysqli_query($con, "SELECT * FROM tires WHERE id='$id'");
-    $edit_row = mysqli_fetch_assoc($res);
+    $id = (int) $_GET['edit'];
+
+    $stmt = $con->prepare("SELECT * FROM tires WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $edit_row = $stmt->get_result()->fetch_assoc();
 }
 
-// ➕ + ✏️ حفظ
+/* =========================
+   💾 حفظ (إضافة / تعديل)
+========================= */
 if(isset($_POST['save'])){
-    $id = $_POST['id'];
-    $car_id = $_POST['car_id'];
-    $type = $_POST['tire_type'];
-    $date = $_POST['change_date'];
-    $notes = $_POST['notes'];
-    $driver= $_POST['driver'];
-    $cost= $_POST['cost'];
-    if(!empty($id)){
-        // تعديل
-        $query = "UPDATE tires SET
-                  car_id='$car_id',
-                  driver ='$driver',
-                  tire_type='$type',
-                  change_date='$date',
-                  notes='$notes',
-                  cost='$cost'
-                  WHERE id='$id'";
+
+    $id = (int) ($_POST['id'] ?? 0);
+    $car_id = trim($_POST['car_id']);
+    $driver = trim($_POST['driver']);
+    $tire_type = trim($_POST['tire_type']);
+    $change_date = $_POST['change_date'];
+    $notes = trim($_POST['notes']);
+    $cost = (float) $_POST['cost'];
+
+    if($id > 0){
+
+        // 🔁 تحديث
+        $stmt = $con->prepare("UPDATE tires SET 
+            car_id=?,
+            driver=?,
+            tire_type=?,
+            change_date=?,
+            notes=?,
+            cost=?
+            WHERE id=?");
+
+        $stmt->bind_param(
+            "sssssdi",
+            $car_id,
+            $driver,
+            $tire_type,
+            $change_date,
+            $notes,
+            $cost,
+            $id
+        );
+
     } else {
-        // إضافة
-        $query = "INSERT INTO tires (car_id, tire_type, change_date, notes, driver,cost)
-                  VALUES ('$car_id','$tire_type','$change_date','$notes','$driver','$cost')";
+
+        // ➕ إضافة
+        $stmt = $con->prepare("INSERT INTO tires 
+        (car_id, driver, tire_type, change_date, notes, cost)
+        VALUES (?, ?, ?, ?, ?, ?)");
+
+        $stmt->bind_param(
+            "sssssd",
+            $car_id,
+            $driver,
+            $tire_type,
+            $change_date,
+            $notes,
+            $cost
+        );
     }
 
-    mysqli_query($con, $query);
+    $stmt->execute();
+
     header("Location: tire.php?success=1");
     exit();
 }
 
-// عرض البيانات
-$result = mysqli_query($con, "SELECT * FROM tires");
+/* =========================
+   📊 عرض البيانات
+========================= */
+$result = mysqli_query($con, "SELECT * FROM tires ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <title>إدارة الإطارات</title>
@@ -64,14 +109,17 @@ body {
     background: #f4f6f9;
 }
 
-/* الفورم */
+.container{
+    width:95%;
+    margin:auto;
+}
+
 .form-container {
     width: 400px;
     margin: 30px auto;
     background: #fff;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px #ddd;
 }
 
 input, textarea {
@@ -96,9 +144,8 @@ button:hover {
     background: #0056b3;
 }
 
-/* الجدول */
 .table-container {
-    width: 90%;
+    width: 95%;
     margin: 30px auto;
 }
 
@@ -111,7 +158,7 @@ table {
 th, td {
     padding: 10px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border: 1px solid #ddd;
 }
 
 th {
@@ -119,96 +166,107 @@ th {
     color: white;
 }
 
-/* أزرار */
-a {
+.edit {
+    background: green;
+    color: white;
     padding: 5px 10px;
     border-radius: 5px;
     text-decoration: none;
 }
 
-.edit {
-    background: green;
-    color: white;
-}
-
 .delete {
     background: red;
     color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
 }
+
 .success {
     text-align:center;
     color: green;
+    font-weight:bold;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="form-container">
-<h2>إدارة الإطارات</h2>
 
-<?php
-if(isset($_GET['success'])){
-    echo "<p class='success'>✔ تمت العملية بنجاح</p>";
-}
-?>
+<h2>🛞 إدارة الإطارات</h2>
+
+<?php if(isset($_GET['success'])): ?>
+<p class="success">✔ تمت العملية بنجاح</p>
+<?php endif; ?>
 
 <form method="post">
-    <input type="hidden" name="id" value="<?php echo @$edit_row['id']; ?>">
+
+    <input type="hidden" name="id" value="<?php echo $edit_row['id'] ?? 0; ?>">
 
     <input type="text" name="car_id" placeholder="رقم السيارة"
-    value="<?php echo @$edit_row['car_id']; ?>" required>
+    value="<?php echo htmlspecialchars($edit_row['car_id'] ?? ''); ?>" required>
 
     <input type="text" name="driver" placeholder="المزود"
-    value="<?php echo @$edit_row['driver']; ?>" required>
+    value="<?php echo htmlspecialchars($edit_row['driver'] ?? ''); ?>" required>
 
     <input type="text" name="tire_type" placeholder="نوع الإطار"
-    value="<?php echo @$edit_row['tire_type']; ?>" required>
+    value="<?php echo htmlspecialchars($edit_row['tire_type'] ?? ''); ?>" required>
 
     <input type="date" name="change_date"
-    value="<?php echo @$edit_row['change_date']; ?>" required>
+    value="<?php echo $edit_row['change_date'] ?? ''; ?>" required>
 
-    <input type="DECIMAL" name="cost"
-    value="<?php echo @$edit_row['cost']; ?>" required>
+    <input type="number" step="0.01" name="cost" placeholder="التكلفة"
+    value="<?php echo $edit_row['cost'] ?? ''; ?>" required>
 
-    <textarea name="notes" placeholder="ملاحظات"><?php echo @$edit_row['notes']; ?></textarea>
-
+    <textarea name="notes" placeholder="ملاحظات"><?php echo htmlspecialchars($edit_row['notes'] ?? ''); ?></textarea>
 
     <button name="save">
         <?php echo $edit_row ? "تحديث" : "إضافة"; ?>
     </button>
+
 </form>
+
 </div>
 
 <div class="table-container">
-<table dir="rtl">
+
+<table>
 <tr>
-    <th>رقم السيارة</th>
+    <th>السيارة</th>
     <th>المزود</th>
     <th>نوع الإطار</th>
-    <th>تاريخ التغيير</th>
+    <th>التاريخ</th>
+    <th>التكلفة</th>
     <th>ملاحظات</th>
-    <th>تكلفة</th>
     <th>إجراءات</th>
 </tr>
 
 <?php while($row = mysqli_fetch_assoc($result)){ ?>
+
 <tr>
-    <td><?php echo $row['car_id']; ?></td>
-    <td><?php echo $row['driver']; ?></td>
-    <td><?php echo $row['tire_type']; ?></td>
-    <td><?php echo $row['change_date']; ?></td>
-    <td><?php echo $row['notes']; ?></td>
-     <td><?php echo $row['cost']; ?></td>
-    
+    <td><?php echo htmlspecialchars($row['car_id']); ?></td>
+    <td><?php echo htmlspecialchars($row['driver']); ?></td>
+    <td><?php echo htmlspecialchars($row['tire_type']); ?></td>
+    <td><?php echo htmlspecialchars($row['change_date']); ?></td>
+    <td><?php echo htmlspecialchars($row['cost']); ?></td>
+    <td><?php echo htmlspecialchars($row['notes']); ?></td>
+
     <td>
         <a class="edit" href="?edit=<?php echo $row['id']; ?>">تعديل</a>
-        <a class="delete" href="?delete=<?php echo $row['id']; ?>" onclick="return confirm('متأكد من الحذف؟')">حذف</a>
+
+        <form method="post" style="display:inline;">
+            <input type="hidden" name="delete_id" value="<?php echo $row['id']; ?>">
+            <button class="delete" onclick="return confirm('متأكد من الحذف؟')">حذف</button>
+        </form>
     </td>
 </tr>
+
 <?php } ?>
 
 </table>
+
 </div>
 
 </body>

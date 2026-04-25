@@ -1,109 +1,139 @@
 <?php
 session_start();
-
 include('../include/connected.php');
+
+/* =========================
+   🗑️ حذف آمن (POST)
+========================= */
+if(isset($_POST['delete_id'])){
+    $id = (int) $_POST['delete_id'];
+
+    $stmt = $con->prepare("DELETE FROM maintenance WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    header("Location: maintenance.php");
+    exit();
+}
+
+/* =========================
+   📊 جلب البيانات
+========================= */
+$query = "SELECT * FROM maintenance ORDER BY id DESC";
+$result = mysqli_query($con, $query);
+
+/* 💰 إجمالي التكلفة */
+$total_cost = 0;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صيانة المركبات</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body><br>
+<meta charset="UTF-8">
+<title>صيانة المركبات</title>
+
 <style>
-  /* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+body{font-family:Arial;background:#f4f6f9;margin:0;padding:0;}
+
+.container{
+    width:95%;
+    margin:auto;
 }
 
-.update{
-    color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
-}
-.update:hover{
-    background-color: rgb(8, 94, 23);
-    color: white;
-}
-.remove{
-  color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
-    margin-bottom: 15px;
+table{
+    width:100%;
+    margin-top:20px;
+    background:#fff;
+    border-collapse:collapse;
 }
 
+th,td{
+    padding:10px;
+    border:1px solid #ddd;
+    text-align:center;
+}
+
+th{
+    background:#28a745;
+    color:#fff;
+}
+
+.delete{
+    background:red;
+    color:#fff;
+    padding:5px 10px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.total{
+    margin-top:15px;
+    padding:10px;
+    background:#fff;
+    font-size:18px;
+}
 </style>
-<?php
-// start delete
-@$id =$_GET['id'];
-if(isset($id)){
-  $query ="DELETE FROM maintenance WHERE id='$id'";
-  $delete = mysqli_query($con , $query);
-  if(isset($delete)){
-     echo '<script>alert ("تم حزف المستخدم بنجاح");</script>';
 
-  }else{
-    echo '<script>alert ("لم تتم حزف المستخدم");</script>';
-  }
-}
+</head>
+<body>
 
-// end delete
-?>
-   <div class ="sidebar_container">
-    
-<table dir="rtl">
-  <tr>
-<td>رقم العملية</td>
-<td>اسم الورشة</td>
-<td> لوحة السطحة</td>
-<td>المزود</td>
-<td>نوع الصيانة</td>
-<td>التكلفة</td>
-<td> ملاحظة</td>
-<td> تاريخ الصيانة</td>
+<div class="container">
 
+<h2>🔧 سجل صيانة المركبات</h2>
 
-  </tr> 
-  <?php
-  $total_cost = 0;
-$query="SELECT *  FROM maintenance";
-$result =mysqli_query($con,$query);
-while ($row=mysqli_fetch_assoc($result)){
+<!-- =========================
+     📋 الجدول
+========================= -->
+<table>
+
+<tr>
+<th>رقم العملية</th>
+<th>اسم الورشة</th>
+<th>لوحة السطحة</th>
+<th>المزود</th>
+<th>نوع الصيانة</th>
+<th>التكلفة</th>
+<th>ملاحظة</th>
+<th>تاريخ الصيانة</th>
+<th>إجراء</th>
+</tr>
+
+<?php while($row = mysqli_fetch_assoc($result)){ 
+
+$total_cost += (float)$row['cost'];
 ?>
 
-  <tr>
-<th><?PHP echo $row['id'];?></th>
-<th> <?PHP echo $row['vehicle_name'];?></th>
-<th> <?PHP echo $row['plate_number'];?></th>
-<th> <?PHP echo $row['driver'];?></th>
-<th><?PHP echo $row['maintenance_type'];?></th>
-<th> <?PHP echo $row['cost'];?></th>
-<th> <?PHP echo $row['notes'];?></th>
-<th> <?PHP echo $row['maintenance_date'];?></th>
+<tr>
+<td><?php echo $row['id']; ?></td>
+<td><?php echo htmlspecialchars($row['vehicle_name']); ?></td>
+<td><?php echo htmlspecialchars($row['plate_number']); ?></td>
+<td><?php echo htmlspecialchars($row['driver']); ?></td>
+<td><?php echo htmlspecialchars($row['maintenance_type']); ?></td>
+<td><?php echo htmlspecialchars($row['cost']); ?> ريال</td>
+<td><?php echo htmlspecialchars($row['notes']); ?></td>
+<td><?php echo htmlspecialchars($row['maintenance_date']); ?></td>
 
+<td>
+<form method="post" onsubmit="return confirm('هل تريد حذف السجل؟')">
+    <input type="hidden" name="delete_id" value="<?php echo $row['id']; ?>">
+    <button class="delete">حذف</button>
+</form>
+</td>
 
-    
-  </tr> 
-  
-  </dive>
-  
-<?php
-}
-?>
+</tr>
+
+<?php } ?>
+
+</table>
+
+<!-- =========================
+     💰 الإجمالي
+========================= -->
+<div class="total">
+    💰 إجمالي تكلفة الصيانة: <b><?php echo $total_cost; ?> ريال</b>
+</div>
+
+</div>
 
 </body>
 </html>

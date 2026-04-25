@@ -1,148 +1,142 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
+
+if(isset($_POST['proadd'])){
+
+    $proname    = mysqli_real_escape_string($con, $_POST['proname']);
+    $proprice   = mysqli_real_escape_string($con, $_POST['proprice']);
+    $prosection = mysqli_real_escape_string($con, $_POST['prosection']);
+    $prodescrip = mysqli_real_escape_string($con, $_POST['prodescrip']);
+    $prounv     = mysqli_real_escape_string($con, $_POST['prounv']);
+
+    // 📸 الصورة
+    $imgname = $_FILES['proimg']['name'];
+    $tmp     = $_FILES['proimg']['tmp_name'];
+    $size    = $_FILES['proimg']['size'];
+
+    $allowed = ['jpg','jpeg','png','gif'];
+    $ext = strtolower(pathinfo($imgname, PATHINFO_EXTENSION));
+
+    if(empty($proname) || empty($proprice) || empty($prosection) || empty($prodescrip)){
+        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+    }
+    elseif(!in_array($ext, $allowed)){
+        echo "<script>alert('نوع الصورة غير مسموح');</script>";
+    }
+    elseif($size > 2*1024*1024){
+        echo "<script>alert('حجم الصورة كبير (أقصى 2MB)');</script>";
+    }
+    else{
+
+        $newName = time() . "_" . $imgname;
+        move_uploaded_file($tmp, "../uploads/img/".$newName);
+
+        $query = "INSERT INTO product 
+        (proname, proimg, proprice, prosection, prodescrip, prounv)
+        VALUES 
+        ('$proname','$newName','$proprice','$prosection','$prodescrip','$prounv')";
+
+        if(mysqli_query($con,$query)){
+            echo "<script>alert('تم إضافة الخدمة بنجاح');</script>";
+        }else{
+            echo "<script>alert('حدث خطأ');</script>";
+        }
+    }
+}
 ?>
-<?php
-@$proname=$_POST['proname'];
-@$proprice=$_POST['proprice'];
-@$prosection=$_POST['prosection'];
-@$prodescrip=$_POST['prodescrip'];
 
-@$prounv=$_POST['prounv'];
-@$proadd=$_POST['proadd'];
-// start imge
-@$imgname =$_FILES['proimg']['name'];
-@$imgeTmp =$_FILES['proimg']['tmp_name'];
-// end img
-if(isset($proadd)){
-    if(empty($proname) || empty($proprice)  || empty($prosection) || empty($prosection) || empty($prodescrip))
-    {
-     echo '<script>alert ("الرجاء ملئ الحقل ");</script>';
-}
-else{
-    @$proimg = rand(0,5000) . "_" . $imgname;
-
-    move_uploaded_file($imgeTmp, '../uploads/img/' . $proimg);
-
-$query="INSERT INTO product (proname,proimg,proprice,prosection,prodescrip,prounv) VALUES ('$proname','$proimg','$proprice','$prosection','$prodescrip','$prounv')";
-$result =mysqli_query($con, $query);
-if(isset($result)){
-        echo '<script>alert ("تم اضافة الخدمة بنجاح");</script>';
-
-}else{
-     echo '<script>alert ("لم تتم اضافة الخدمة ");</script>';
-}
-}
-}
-?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اضافة خدمات</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8">
+<title>إضافة خدمة</title>
+
 <style>
-    /* start product css */
+body{
+    font-family: 'Cairo';
+    background:#f4f6f9;
+}
+
 .form_product{
-    width: 70%;
-    margin: 5px;
-    box-shadow: 0 5px 10px rgp(0,0,0,1);
+    width: 50%;
+    margin: 40px auto;
+    padding: 20px;
+    background:#fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-radius:10px;
 }
+
 h1{
-    padding: 10px;
+    text-align:center;
 }
+
 label{
-    display: block;
-    margin-bottom: 5px;
-    font-size: 25px;
+    display:block;
+    margin-top:10px;
 }
-input{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
 .button{
-    width: 90%;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #007bff;
-    border: none;
-    font-size: 28px;
-}
-button:hover{
-    background-color: #0056b3;
-    color: white;
+    margin-top:15px;
+    background:#3498db;
+    color:#fff;
+    border:none;
+    padding:12px;
+    cursor:pointer;
 }
 
-
-
-/* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.button:hover{
+    background:#2980b9;
 }
-
-
 </style>
+
+</head>
 <body>
-    <center>
-        <main>
-            <div class="form_product">
-            
-                <h1>اضافة خدمة</h1>
-                <form action="addproduct.php" method="post" enctype="multipart/form-data">
 
-                 <label for="name">عنوان الخدمة</label>
-                <input type="text" name="proname" id="name">
-            
+<div class="form_product">
+<h1>إضافة خدمة</h1>
 
-                <label for="file">صورة  الخدمة</label>
-                <input type="file" name="proimg" id="file">
+<form method="post" enctype="multipart/form-data">
 
-                <label for="price">سعر الخدمة </label>
-                <input type="text" name="proprice" id="price">
+<label>عنوان الخدمة</label>
+<input type="text" name="proname">
 
-                <label for="description">تفاصيل الخدمة</label>
-                <input type="text" name="prodescrip" id="description">
+<label>صورة الخدمة</label>
+<input type="file" name="proimg">
 
-                <label for="prounv">توفر الخدمة</label>
-                <input type="text" name="prounv" id="prounv">
+<label>السعر</label>
+<input type="text" name="proprice">
 
-                
-                  <!------- start sectione---->
-                 <div>
-                    <label for="form_control">الاقسام  </label>
-                    <select name="prosection" id="form_control">
+<label>التفاصيل</label>
+<input type="text" name="prodescrip">
 
-                    <?php
-                    $query="SELECT *  FROM section";
-                    $result =mysqli_query($con, $query);
-    while ($row=mysqli_fetch_assoc($result)){
-        echo '<option name="section">'.$row['sectionname'].'</option>';
-    }
-                    ?>
-                        
-                 </div><br>
-                 <br>
-                 <!------- end sectione---->
-                 <input class="button" type="submit" name="proadd">
-                   
+<label>التوفر</label>
+<input type="text" name="prounv">
 
-</input>
-                </form>
+<label>القسم</label>
+<select name="prosection">
+<?php
+$res = mysqli_query($con,"SELECT * FROM section");
+while($row = mysqli_fetch_assoc($res)){
+    echo "<option value='".$row['sectionname']."'>".$row['sectionname']."</option>";
+}
+?>
+</select>
 
-                
-            </div>
-</maim>
-    </center>
+<button class="button" name="proadd">إضافة</button>
+
+</form>
+</div>
+
 </body>
 </html>
+

@@ -86,11 +86,16 @@ if(isset($_SESSION['user_id'])){
   </a>
 </li>
 <li>
-  <a href="uboutas.php">
+  <a href="about.php">
     من نحن 
   </a>
 </li>
 
+<li>
+  <a href="contact.php">
+   تواصل معنا
+  </a>
+</li>
         </ul>
     </div>
 

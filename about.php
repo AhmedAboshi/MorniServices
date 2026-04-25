@@ -116,9 +116,9 @@ body{
     <div class="menu">
         <a href="index.php">الرئيسية</a>
        
-        <a href="uboutas.php">من نحن</a>
+        <a href="about.php">من نحن</a>
         
-        <a href="#">اتصل بنا</a>
+        <a href="contact.php">اتصل بنا</a>
     </div>
 
     <div class="right">

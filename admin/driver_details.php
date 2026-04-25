@@ -1,12 +1,10 @@
+
 <?php
 include('../include/connected.php');
 
-// التحقق من الاتصال
+/* 🆔 التحقق من ID */
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// أخذ ID
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-
-// جلب البيانات
 $result = $con->query("SELECT * FROM drivers WHERE id = $id");
 
 if ($result->num_rows == 0) {
@@ -14,6 +12,11 @@ if ($result->num_rows == 0) {
 }
 
 $driver = $result->fetch_assoc();
+
+/* 🔐 دالة حماية */
+function e($value){
+    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
 ?>
 
 <!DOCTYPE html>
@@ -21,17 +24,46 @@ $driver = $result->fetch_assoc();
 <head>
 <meta charset="UTF-8">
 <title>تفاصيل السائق</title>
+
 <style>
-body { font-family: Arial; direction: rtl; }
-.container { width: 50%; margin: auto; }
-.card {
-  border: 1px solid #ccc;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 10px;
+body {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    background: #f4f6f9;
 }
-p { font-size: 18px; margin: 8px 0; }
+
+/* 📦 الحاوية */
+.container {
+    width: 50%;
+    margin: 40px auto;
+}
+
+/* 📇 الكرت */
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* 📄 النص */
+p {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+/* 🔘 زر */
+.back-btn {
+    display: inline-block;
+    margin-top: 15px;
+    background: #3498db;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+}
 </style>
+
 </head>
 <body>
 
@@ -39,17 +71,21 @@ p { font-size: 18px; margin: 8px 0; }
 <h2>👤 تفاصيل السائق</h2>
 
 <div class="card">
-  <p><strong>الاسم:</strong> <?= $driver['name'] ?></p>
-  <p><strong>رقم الهوية:</strong> <?= $driver['national_id'] ?></p>
-  <p><strong>الجوال:</strong> <?= $driver['phone'] ?></p>
-  <p><strong>نوع الشاحنة:</strong> <?= $driver['truck_type'] ?></p>
-  <p><strong>رقم اللوحة:</strong> <?= $driver['plate_number'] ?></p>
-  <p><strong>منطقة العمل:</strong> <?= $driver['work_area'] ?></p>
-  <p><strong>تاريخ الإضافة:</strong> <?= $driver['created_at'] ?></p>
+
+<p><strong>الاسم:</strong> <?= e($driver['name']) ?></p>
+<p><strong>رقم الهوية:</strong> <?= e($driver['national_id']) ?></p>
+<p><strong>الجوال:</strong> <?= e($driver['phone']) ?></p>
+<p><strong>نوع الشاحنة:</strong> <?= e($driver['truck_type']) ?></p>
+<p><strong>رقم اللوحة:</strong> <?= e($driver['plate_number']) ?></p>
+<p><strong>منطقة العمل:</strong> <?= e($driver['work_area']) ?></p>
+<p><strong>تاريخ الإضافة:</strong> <?= e($driver['created_at']) ?></p>
+
 </div>
 
-<a href="driversview.php">⬅ الرجوع للقائمة</a>
+<a class="back-btn" href="driversview.php">⬅ الرجوع للقائمة</a>
+
 </div>
 
 </body>
 </html>
+

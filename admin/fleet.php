@@ -1,107 +1,191 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
 
+/* 🔍 البحث */
+$search = $_GET['search'] ?? '';
 
+if ($search != '') {
+    $search_safe = mysqli_real_escape_string($con, $search);
+    $query = "SELECT * FROM fleet 
+              WHERE driver LIKE '%$search_safe%' 
+              OR plate LIKE '%$search_safe%' 
+              OR typefleet LIKE '%$search_safe%'";
+} else {
+    $query = "SELECT * FROM fleet";
+}
+
+$result = mysqli_query($con, $query);
+
+/* 🗑️ حذف */
+if (isset($_GET['id'])) {
+    $id = (int) $_GET['id'];
+    mysqli_query($con, "DELETE FROM fleet WHERE id=$id");
+    header("Location: fleet.php");
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اسطول الشركة</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body><br>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أسطول الشركة</title>
+
 <style>
-  /* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+/* 🔍 البحث */
+.search-box {
+    text-align: center;
+    margin: 20px;
+}
+
+.search-box input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 25px;
     border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
-.update{
+.search-box button {
+    padding: 10px 15px;
+    border: none;
+    background: #3498db;
     color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
+    border-radius: 20px;
+    cursor: pointer;
 }
-.update:hover{
-    background-color: rgb(8, 94, 23);
+
+/* 📊 الجدول */
+table {
+    width: 95%;
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+th {
+    background: #2c3e50;
     color: white;
+    padding: 12px;
 }
-  img {
-    width: 80px;
-    height: 80px;
-} 
+
+td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+tr:nth-child(even){
+    background: #f9f9f9;
+}
+
+tr:hover{
+    background: #eef5ff;
+}
+
+/* 🖼️ الصور */
+img {
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+/* 🔘 الأزرار */
+.delete {
+    background: #e74c3c;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.update {
+    background: #27ae60;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 </style>
-<?php
-// start delete
-@$id =$_GET['id'];
-if(isset($id)){
-  $query ="DELETE FROM fleet WHERE id='$id'";
-  $delete = mysqli_query($con , $query);
-  if(isset($delete)){
-     echo '<script>alert ("تم حزف السطحة بنجاح");</script>';
+</head>
 
-  }else{
-    echo '<script>alert ("لم تتم حزف السطحة");</script>';
-  }
-}
+<body>
 
-// end delete
-?>
+<!-- 🔍 البحث -->
+<div class="search-box">
+<form method="GET">
+<input type="text" name="search" placeholder="ابحث عن مركبة..." value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit">بحث</button>
+</form>
+</div>
 
-   <div class ="sidebar_container">
+<!-- 📊 الجدول -->
 <table dir="rtl">
-  <tr>
-<td>رقم المركبة</td>
-<td>صورة المركبة</td>
-<td>المزود</td>
-<td> لوحة المركبة</td>
-<td>طراز المركبة</td>
-<td>نوع المركبة</td>
-<td>موديل المركبة</td>
-<td>لون المركبة</td>
-<td>عمل المركبة</td>
-<td>حزف المركبة</td>
-<td>تعديل المركبة</td>
-  </tr> 
-  <?php
-$query="SELECT *  FROM fleet";
-$result =mysqli_query($con,$query);
-while ($row=mysqli_fetch_assoc($result)){
-?>
+<thead>
+<tr>
+<th>رقم</th>
+<th>الصورة</th>
+<th>المزود</th>
+<th>اللوحة</th>
+<th>الطراز</th>
+<th>النوع</th>
+<th>الموديل</th>
+<th>اللون</th>
+<th>العمل</th>
+<th>حذف</th>
+<th>تعديل</th>
+</tr>
+</thead>
 
-  <tr>
-<th><?PHP echo $row['id'];?></th>
+<tbody>
+<?php while ($row = mysqli_fetch_assoc($result)) { ?>
+<tr>
 
-<th><img src="../fleetimg/img//<?PHP echo $row['imgfleet'];?>";</th>
-</th>
-<th> <?PHP echo $row['driver'];?></th>
-<th> <?PHP echo $row['plate'];?></th>
-<th> <?PHP echo $row['typefleet'];?></th>
-<th> <?PHP echo $row['classify'];?></th>
-<th> <?PHP echo $row['model'];?></th>
-<th> <?PHP echo $row['colorfleet'];?></th>
-<th> <?PHP echo $row['work'];?></th>
+<td><?php echo $row['id']; ?></td>
 
-    <td><a href="fleet.php? id= <?php echo $row['id']; ?>"><button type="submit" class="delete">حزف الخدمة</button></a></td>
-    <td><a href="updatefleet.php? id= <?php echo $row['id']; ?>"><button type="submit" class="update">تعديل الخدمة</button></a></td>
+<td>
+<img src="../fleetimg/img/<?php echo $row['imgfleet']; ?>">
+</td>
 
-  </tr> 
-  
-  </dive>
-  
-<?php
-}
-?>
+<td><?php echo $row['driver']; ?></td>
+<td><?php echo $row['plate']; ?></td>
+<td><?php echo $row['typefleet']; ?></td>
+<td><?php echo $row['classify']; ?></td>
+<td><?php echo $row['model']; ?></td>
+<td><?php echo $row['colorfleet']; ?></td>
+<td><?php echo $row['work']; ?></td>
+
+<td>
+<a href="fleet.php?id=<?php echo $row['id']; ?>" 
+onclick="return confirm('هل أنت متأكد من حذف المركبة؟')">
+<button class="delete">حذف</button>
+</a>
+</td>
+
+<td>
+<a href="updatefleet.php?id=<?php echo $row['id']; ?>">
+<button class="update">تعديل</button>
+</a>
+</td>
+
+</tr>
+<?php } ?>
+</tbody>
+
+</table>
+
 </body>
 </html>
+

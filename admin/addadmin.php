@@ -1,120 +1,107 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
+
+if(isset($_POST['proadd'])){
+
+    $email    = mysqli_real_escape_string($con, $_POST['email']);
+    $password = $_POST['password'];
+
+    if(empty($email) || empty($password)){
+        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+    }
+    elseif(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+        echo "<script>alert('الإيميل غير صحيح');</script>";
+    }
+    else{
+
+        // 🔐 تشفير كلمة المرور
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        $query = "INSERT INTO admin (email, password) 
+                  VALUES ('$email', '$hashed_password')";
+
+        if(mysqli_query($con, $query)){
+            echo "<script>alert('تم إضافة المستخدم بنجاح');</script>";
+        }else{
+            echo "<script>alert('حدث خطأ');</script>";
+        }
+    }
+}
 ?>
-<?php
 
-@$email=$_POST['email'];
-@$password=$_POST['password'];
-@$proadd=$_POST['proadd'];
-
-
-if(isset($proadd)){
-    if( empty($email)  || empty($password))
-    {
-     echo '<script>alert ("الرجاء ملئ الحقل ");</script>';
-}
-else{
-   
-
-$query="INSERT INTO admin (email,password) VALUES ('$email','$password')";
-$result =mysqli_query($con, $query);
-if(isset($result)){
-        echo '<script>alert ("تم اضافة مستخدم بنجاح");</script>';
-
-}else{
-     echo '<script>alert ("لم تتم اضافة  ");</script>';
-}
-}
-}
-?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اضافة مستخدم</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8">
+<title>إضافة مستخدم</title>
+
 <style>
-    /* start product css */
+body{
+    font-family: 'Cairo';
+    background:#f4f6f9;
+}
+
 .form_product{
-    width: 70%;
-    margin: 5px;
-    box-shadow: 0 5px 10px rgp(0,0,0,1);
+    width: 40%;
+    margin: 60px auto;
+    padding: 20px;
+    background:#fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-radius:10px;
 }
+
 h1{
-    padding: 10px;
+    text-align:center;
 }
+
 label{
-    display: block;
-    margin-bottom: 5px;
-    font-size: 25px;
+    display:block;
+    margin-top:10px;
 }
+
 input{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
 .button{
-    width: 90%;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #007bff;
-    border: none;
-    font-size: 28px;
-}
-button:hover{
-    background-color: #0056b3;
-    color: white;
+    margin-top:15px;
+    background:#3498db;
+    color:#fff;
+    border:none;
+    padding:12px;
+    cursor:pointer;
 }
 
-
-
-/* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.button:hover{
+    background:#2980b9;
 }
-
-
 </style>
+</head>
+
 <body>
-    <center>
-        <main>
-            <div class="form_product">
-            
-                <h1>اضافة مستخدم</h1>
-                <form action="addadmin.php" method="post">
 
-                 
-            
+<div class="form_product">
+<h1>إضافة مستخدم</h1>
 
-                <label for="price"> الايميل </label>
-                <input type="text" name="email" id="email">
+<form method="post">
 
-                <label for="password">كلمة المرور </label>
-                <input type="text" name="password" id="password">
+<label>الإيميل</label>
+<input type="email" name="email">
 
-                
+<label>كلمة المرور</label>
+<input type="password" name="password">
 
-    
-                 <input class="button" type="submit" name="proadd">
-                   
+<button class="button" name="proadd">إضافة</button>
 
-</input>
-                </form>
+</form>
+</div>
 
-                
-            </div>
-</maim>
-    </center>
 </body>
 </html>
+

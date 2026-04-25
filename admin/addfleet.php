@@ -1,153 +1,148 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
+
+if(isset($_POST['fleetadd'])){
+
+    $driver     = mysqli_real_escape_string($con, $_POST['driver']);
+    $plate      = mysqli_real_escape_string($con, $_POST['plate']);
+    $typefleet  = mysqli_real_escape_string($con, $_POST['typefleet']);
+    $classify   = mysqli_real_escape_string($con, $_POST['classify']);
+    $model      = mysqli_real_escape_string($con, $_POST['model']);
+    $colorfleet = mysqli_real_escape_string($con, $_POST['colorfleet']);
+    $work       = mysqli_real_escape_string($con, $_POST['work']);
+
+    // 📸 الصورة
+    $imgname = $_FILES['imgfleet']['name'];
+    $tmp     = $_FILES['imgfleet']['tmp_name'];
+    $size    = $_FILES['imgfleet']['size'];
+
+    $allowed = ['jpg','jpeg','png','gif'];
+    $ext = strtolower(pathinfo($imgname, PATHINFO_EXTENSION));
+
+    if(empty($driver) || empty($plate) || empty($typefleet) || empty($classify) || empty($model)){
+        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+    }
+    elseif(!in_array($ext, $allowed)){
+        echo "<script>alert('نوع الصورة غير مسموح');</script>";
+    }
+    elseif($size > 2*1024*1024){
+        echo "<script>alert('حجم الصورة كبير (أقصى 2MB)');</script>";
+    }
+    else{
+
+        $newName = time() . "_" . $imgname;
+        move_uploaded_file($tmp, "../fleetimg/img/".$newName);
+
+        $query = "INSERT INTO fleet 
+        (driver, imgfleet, plate, typefleet, classify, model, colorfleet, work)
+        VALUES 
+        ('$driver','$newName','$plate','$typefleet','$classify','$model','$colorfleet','$work')";
+
+        if(mysqli_query($con,$query)){
+            echo "<script>alert('تم إضافة المركبة بنجاح');</script>";
+            header("Location: fleet.php");
+        }else{
+            echo "<script>alert('حدث خطأ');</script>";
+        }
+    }
+}
 ?>
-<?php
-@$driver=$_POST['driver'];
-@$plate=$_POST['plate'];
-@$typefleet=$_POST['typefleet'];
-@$classify=$_POST['classify'];
-@$model=$_POST['model'];
-@$colorfleet	=$_POST['colorfleet'];
-@$work=$_POST['work'];
-@$fleetadd=$_POST['fleetadd'];
-// start imge
-@$imgname =$_FILES['imgfleet']['name'];
-@$imgeTmp =$_FILES['imgfleet']['tmp_name'];
-// end img
-if(isset($fleetadd)){
-    if(empty($driver) || empty($plate)  || empty($typefleet) || empty($classify) || empty($model))
-    {
-     echo '<script>alert ("الرجاء ملئ الحقل ");</script>';
-}
-else{
-    @$imgfleet = rand(0,5000) . "_" . $imgname;
 
-    move_uploaded_file($imgeTmp, '../fleetimg/img/' . $imgfleet);
-
-$query="INSERT INTO fleet (driver,imgfleet,plate,typefleet,classify,model,colorfleet,work) VALUES ('$driver','$imgfleet','$plate','$typefleet','$classify','$model','$colorfleet','$work')";
-$result =mysqli_query($con,$query);
-if(isset($result)){
-        echo '<script>alert ("تم اضافة المركبة بنجاح");</script>';
-
-}else{
-     echo '<script>alert ("لم تتم اضافة المركبة ");</script>';
-}
-}
-}
-?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اضافة سطحة</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8">
+<title>إضافة مركبة</title>
+
 <style>
-    /* start product css */
+body{
+    font-family: 'Cairo';
+    background:#f4f6f9;
+}
+
 .form_product{
-    width: 70%;
-    margin: 5px;
-    box-shadow: 0 5px 10px rgp(0,0,0,1);
+    width: 50%;
+    margin: 40px auto;
+    padding: 20px;
+    background:#fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-radius:10px;
 }
+
 h1{
-    padding: 10px;
+    text-align:center;
 }
+
 label{
-    display: block;
-    margin-bottom: 5px;
-    font-size: 25px;
+    display:block;
+    margin-top:10px;
 }
-input{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
 .button{
-    width: 90%;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #007bff;
-    border: none;
-    font-size: 28px;
-}
-button:hover{
-    background-color: #0056b3;
-    color: white;
+    margin-top:15px;
+    background:#3498db;
+    color:#fff;
+    border:none;
+    padding:12px;
+    cursor:pointer;
 }
 
-
-
-/* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.button:hover{
+    background:#2980b9;
 }
-
-
 </style>
+
+</head>
 <body>
-    <center>
-        <main>
-            <div class="form_product">
-            
-                <h1>اضافة مركبة</h1>
-                <form action="addfleet.php" method="post" enctype="multipart/form-data">
 
-                 <label for="name">المزود</label>
-                <input type="text" name="driver" id="name">
-            
+<div class="form_product">
+<h1>إضافة مركبة</h1>
 
-                <label for="file">صورة  السطحة</label>
-                <input type="file" name="imgfleet" id="file">
+<form method="post" enctype="multipart/form-data">
 
-                <label for="plate">لوحة السطحة</label>
-                <input type="text" name="plate" id="plate">
+<label>المزود</label>
+<input type="text" name="driver">
 
-                <label for="typefleet">طراز السطحة</label>
-                <input type="text" name="typefleet" id="typefleet">
+<label>صورة المركبة</label>
+<input type="file" name="imgfleet">
 
-                <label for="classify">نوع السطحة</label>
-                <input type="text" name="classify" id="classify">
+<label>لوحة المركبة</label>
+<input type="text" name="plate">
 
-                <label for="model">موديل السطحة</label>
-                <input type="text" name="model" id="model">
+<label>طراز المركبة</label>
+<input type="text" name="typefleet">
 
-                <label for="colorfleet">لون السطحة</label>
-                <input type="text" name="colorfleet" id="colorfleet">
-                  <!------- start work fleet---->
-                 <div>
-                    <label for="form_control">عمل السطحة</label>
-                    <select name="work" id="form_control">
+<label>نوع المركبة</label>
+<input type="text" name="classify">
 
-                    <?php
-                    $query="SELECT *  FROM fleet";
-                    $result =mysqli_query($con, $query);
-    while ($row=mysqli_fetch_assoc($result)){
-        echo '<option name="work">'.$row['work'].'</option>';
-    }
-                    ?>
-                        
-                 </div><br>
-                 <br>
-                 <!------- end sectione---->
-                 <input class="button" type="submit" name="fleetadd">
-                   
+<label>موديل المركبة</label>
+<input type="text" name="model">
 
-</input>
-                </form>
+<label>لون المركبة</label>
+<input type="text" name="colorfleet">
 
-                
-            </div>
-</maim>
-    </center>
+<label>مدينة العمل</label>
+<select name="work">
+    <option value="الرياض">الرياض</option>
+    <option value="جده">جده</option>
+    <option value="الدمام">الدمام</option>
+</select>
+
+<button class="button" name="fleetadd">إضافة</button>
+
+</form>
+</div>
+
 </body>
 </html>
+

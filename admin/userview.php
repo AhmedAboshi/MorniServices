@@ -1,107 +1,173 @@
+
 <?php
 session_start();
-
 include('../include/connected.php');
+
+/* 🔍 البحث */
+$search = $_GET['search'] ?? '';
+
+if ($search != '') {
+    $search_safe = mysqli_real_escape_string($con, $search);
+    $query = "SELECT * FROM users 
+              WHERE username LIKE '%$search_safe%' 
+              OR email LIKE '%$search_safe%'";
+} else {
+    $query = "SELECT * FROM users";
+}
+
+$result = mysqli_query($con, $query);
+
+/* 🗑️ حذف */
+if (isset($_GET['id'])) {
+    $id = (int) $_GET['id'];
+    mysqli_query($con, "DELETE FROM users WHERE id=$id");
+    header("Location: userview.php");
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معلومات العملاء</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body><br>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة العملاء</title>
+
 <style>
-  /* end product css */
-#form_control{
-    width: 80%;
-    padding: 12px;
-    margin-bottom: 10px;
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f4f6f9;
+}
+
+/* 🔍 البحث */
+.search-box {
+    text-align: center;
+    margin: 20px;
+}
+
+.search-box input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 25px;
     border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
-.update{
+.search-box button {
+    padding: 10px 15px;
+    border: none;
+    background: #3498db;
     color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
-}
-.update:hover{
-    background-color: rgb(8, 94, 23);
-    color: white;
-}
-.remove{
-  color: white;
-    font-size: 18px;
-    background-color: rgb(3, 228, 100);
-    padding: 8px 18px;
-    border-radius: 2px;
-    border: 1px solid rgb(154, 240, 182);
-    margin-right: 5px;
-    margin-bottom: 15px;
+    border-radius: 20px;
 }
 
+/* ➕ زر إضافة */
+.add-btn {
+    display: block;
+    width: 200px;
+    margin: 20px auto;
+    text-align: center;
+    background: #27ae60;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+/* 📊 الجدول */
+table {
+    width: 95%;
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    padding: 12px;
+}
+
+td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+tr:nth-child(even){
+    background: #f9f9f9;
+}
+
+/* 🔘 الأزرار */
+.delete {
+    background: #e74c3c;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+.update {
+    background: #27ae60;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+}
 </style>
-<?php
-// start delete
-@$id =$_GET['id'];
-if(isset($id)){
-  $query ="DELETE FROM users WHERE id='$id'";
-  $delete = mysqli_query($con , $query);
-  if(isset($delete)){
-     echo '<script>alert ("تم حزف المستخدم بنجاح");</script>';
+</head>
 
-  }else{
-    echo '<script>alert ("لم تتم حزف المستخدم");</script>';
-  }
-}
+<body>
 
-// end delete
-?>
-<div > 
-    
-    <button type="submit" class="remove"><a href="adduser.php"><h2>اضافة عميل</h2>
-  </div>
-   <div class ="sidebar_container">
-    
+<!-- ➕ إضافة عميل -->
+<a href="adduser.php" class="add-btn">➕ إضافة عميل</a>
+
+<!-- 🔍 البحث -->
+<div class="search-box">
+<form method="GET">
+<input type="text" name="search" placeholder="ابحث عن عميل..." value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit">بحث</button>
+</form>
+</div>
+
+<!-- 📊 الجدول -->
 <table dir="rtl">
-  <tr>
-<td>رقم العميل</td>
-<td>اسم العميل</td>
-<td> الايميل</td>
-<td> كلمة المرور</td>
-<td>حزف العميل</td>
-<td>تعديل بيانات</td>
-  </tr> 
-  <?php
-$query="SELECT *  FROM users";
-$result =mysqli_query($con,$query);
-while ($row=mysqli_fetch_assoc($result)){
-?>
+<thead>
+<tr>
+<th>رقم</th>
+<th>اسم المستخدم</th>
+<th>البريد الإلكتروني</th>
+<th>إجراءات</th>
+<th>تعديل</th>
+</tr>
+</thead>
 
-  <tr>
-<th><?PHP echo $row['id'];?></th>
-<th> <?PHP echo $row['username'];?></th>
-<th> <?PHP echo $row['email'];?></th>
-<th> <?PHP echo $row['password'];?></th>
+<tbody>
+<?php while ($row = mysqli_fetch_assoc($result)) { ?>
+<tr>
 
+<td><?php echo $row['id']; ?></td>
+<td><?php echo $row['username']; ?></td>
+<td><?php echo $row['email']; ?></td>
 
+<td>
+<a href="userview.php?id=<?php echo $row['id']; ?>" 
+onclick="return confirm('هل أنت متأكد من حذف المستخدم؟')">
+<button class="delete">حذف</button>
+</a>
+</td>
 
-    <td><a href="userview.php? id= <?php echo $row['id']; ?>"><button type="submit" class="delete">حزف العميل</button></a></td>
-    <td><a href="updateuser.php? id= <?php echo $row['id']; ?>"><button type="submit" class="update">تعديل العميل</button></a></td>
+<td>
+<a href="updateuser.php?id=<?php echo $row['id']; ?>">
+<button class="update">تعديل</button>
+</a>
+</td>
 
-  </tr> 
-  
-  </dive>
-  
-<?php
-}
-?>
+</tr>
+<?php } ?>
+</tbody>
+
+</table>
 
 </body>
 </html>
