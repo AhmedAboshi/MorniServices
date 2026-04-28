@@ -68,5 +68,18 @@ return [
 'tires_management' => 'Tires Management',
 'oil_monitoring' => 'Oil Monitoring',
 'reports_dashboard' => 'Reports Dashboard',
-'logout' => 'Logout', 
+'logout' => 'Logout',
+'Manage Website Sections' => 'Manage Website Sections',
+'Please fill in the field' => 'Please fill in the field',
+'The section name must not exceed 50 characters' => 'The section name must not exceed 50 characters',
+'The active section has been added' => 'The active section has been added',
+'done Deleted successfully' => 'done Deleted successfully',
+'It was not deleted' => 'It was not deleted',
+'New section' => 'New section',
+'Add a section' => 'Add a section',
+'Serial Number' => 'Serial Number',
+'Section Name' => 'Section Name',
+'Delete Section' => 'Delete Section',
+
+
 ];

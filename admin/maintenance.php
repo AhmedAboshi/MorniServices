@@ -2,114 +2,154 @@
 session_start();
 include('../include/connected.php');
 
-/* =========================
-   💾 حفظ البيانات (آمن)
-========================= */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+/* =========================
+   👤 جلب السائقين 
+========================= */
+$drivers_result = mysqli_query($con, "SELECT id, name FROM drivers");
+
+$drivers = [];
+while($row = mysqli_fetch_assoc($drivers_result)){
+    $drivers[] = $row;
+}
+
+/* =========================
+   🗑️ حذف
+========================= */
+if(isset($_POST['delete_id'])){
+    $id = (int) $_POST['delete_id'];
+
+    $stmt = $con->prepare("DELETE FROM maintenance WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    header("Location: maintenance.php");
+    exit();
+}
+
+/* =========================
+   ✏️ تعديل
+========================= */
+$edit_row = null;
+
+if(isset($_GET['edit'])){
+    $id = (int) $_GET['edit'];
+
+    $stmt = $con->prepare("SELECT * FROM maintenance WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $edit_row = $stmt->get_result()->fetch_assoc();
+}
+
+/* =========================
+   💾 حفظ
+========================= */
+if(isset($_POST['save'])){
+
+    $id = (int) ($_POST['id'] ?? 0);
+    $driver_id = (int)$_POST['driver_id'];
     $vehicle_name = trim($_POST['vehicle_name']);
     $plate_number = trim($_POST['plate_number']);
-    $driver = trim($_POST['driver']);
     $maintenance_type = trim($_POST['maintenance_type']);
     $cost = (float) $_POST['cost'];
     $notes = trim($_POST['notes']);
     $maintenance_date = $_POST['maintenance_date'];
 
-    /* ✅ تحقق من البيانات */
-    if (
-        !empty($vehicle_name) &&
-        !empty($plate_number) &&
-        !empty($maintenance_type) &&
-        !empty($maintenance_date)
-    ) {
+    if($id > 0){
 
-        /* 🔐 Prepared Statement */
-     $stmt = $con->prepare("
-    INSERT INTO maintenance 
-    (vehicle_name, plate_number, driver, maintenance_type, cost, notes, maintenance_date)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-");
+        $stmt = $con->prepare("UPDATE maintenance SET 
+            driver_id=?,
+            vehicle_name=?,
+            plate_number=?,
+            maintenance_type=?,
+            cost=?,
+            notes=?,
+            maintenance_date=?
+            WHERE id=?");
 
-$stmt->bind_param(
-    "ssssdss",
-    $vehicle_name,
-    $plate_number,
-    $driver,
-    $maintenance_type,
-    $cost,
-    $notes,
-    $maintenance_date
-);
-
-$stmt->execute();
-
-        if ($stmt->execute()) {
-
-            header("Location: maintenance.php?success=1");
-            exit();
-
-        } else {
-            $error = "خطأ في الإدخال";
-        }
+        $stmt->bind_param(
+            "issssdsi",
+            $driver_id,
+            $vehicle_name,
+            $plate_number,
+            $maintenance_type,
+            $cost,
+            $notes,
+            $maintenance_date,
+            $id
+        );
 
     } else {
-        $error = "يرجى تعبئة الحقول المطلوبة";
+
+        $stmt = $con->prepare("INSERT INTO maintenance 
+        (driver_id, vehicle_name, plate_number, maintenance_type, cost, notes, maintenance_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+        $stmt->bind_param(
+            "issssds",
+            $driver_id,
+            $vehicle_name,
+            $plate_number,
+            $maintenance_type,
+            $cost,
+            $notes,
+            $maintenance_date
+        );
     }
+
+    $stmt->execute();
+
+    header("Location: maintenance.php?success=1");
+    exit();
 }
+
+/* =========================
+   📊 عرض (JOIN)
+========================= */
+$result = mysqli_query($con, "
+SELECT maintenance.*, drivers.name AS driver_name
+FROM maintenance
+LEFT JOIN drivers ON maintenance.driver_id = drivers.id
+ORDER BY maintenance.id DESC
+");
 ?>
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام صيانة المركبات</title>
+<title>إدارة الصيانة</title>
 
 <style>
-body {
-    font-family: Arial;
-    background:#f4f6f9;
-}
+body {font-family:Arial;background:#f4f6f9;}
 
-.container{
-    width:400px;
-    margin:auto;
-    margin-top:50px;
+.container {
+    width:95%;
+    margin:20px auto;
     background:#fff;
     padding:20px;
     border-radius:10px;
 }
 
-input, textarea {
-    width:100%;
-    margin-bottom:10px;
-    padding:10px;
-    border:1px solid #ddd;
-    border-radius:5px;
+input, select, textarea {
+    width:100%;padding:10px;margin:5px 0;
+    border:1px solid #ccc;border-radius:6px;
 }
 
 button {
-    width:100%;
-    padding:10px;
-    background:green;
-    color:#fff;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+    padding:8px;border:none;border-radius:5px;cursor:pointer;
 }
 
-.alert {
-    padding:10px;
-    margin-bottom:10px;
-    background:#d4edda;
-    color:#155724;
-}
+.save {background:green;color:#fff;width:100%;}
+.edit {background:orange;color:#fff;}
+.delete {background:red;color:#fff;}
 
-.error {
-    padding:10px;
-    margin-bottom:10px;
-    background:#f8d7da;
-    color:#721c24;
-}
+table {width:100%;border-collapse:collapse;margin-top:20px;}
+th, td {padding:10px;border:1px solid #ddd;text-align:center;}
+th {background:#007bff;color:#fff;}
+
+.success {color:green;text-align:center;font-weight:bold;}
 </style>
 
 </head>
@@ -117,37 +157,83 @@ button {
 
 <div class="container">
 
-<h2>🔧 إدخال صيانة مركبة</h2>
+<h2><?= $edit_row ? "✏️ تعديل صيانة" : "➕ إضافة صيانة" ?></h2>
 
-<!-- ✅ نجاح -->
 <?php if(isset($_GET['success'])): ?>
-    <div class="alert">تم إضافة الصيانة بنجاح</div>
+<p class="success">✔ تمت العملية بنجاح</p>
 <?php endif; ?>
 
-<!-- ❌ خطأ -->
-<?php if(isset($error)): ?>
-    <div class="error"><?php echo $error; ?></div>
-<?php endif; ?>
+<!-- الفورم -->
+<form method="post">
 
-<form method="POST">
+<input type="hidden" name="id" value="<?= $edit_row['id'] ?? 0 ?>">
 
-    <input type="text" name="vehicle_name" placeholder="اسم الورشة" required>
+<select name="driver_id" required>
+<option value="">-- اختر السائق --</option>
+<?php foreach($drivers as $d){ ?>
+<option value="<?= $d['id'] ?>"
+<?= (isset($edit_row['driver_id']) && $edit_row['driver_id']==$d['id'])?'selected':'' ?>>
+<?= htmlspecialchars($d['name']) ?>
+</option>
+<?php } ?>
+</select>
 
-    <input type="text" name="plate_number" placeholder="رقم اللوحة" required>
+<input type="text" name="vehicle_name" placeholder="اسم الورشة"
+value="<?= $edit_row['vehicle_name'] ?? '' ?>" required>
 
-    <input type="text" name="driver" placeholder="المزود" required>
+<input type="text" name="plate_number" placeholder="رقم اللوحة"
+value="<?= $edit_row['plate_number'] ?? '' ?>" required>
 
-    <input type="text" name="maintenance_type" placeholder="نوع الصيانة" required>
+<input type="text" name="maintenance_type" placeholder="نوع الصيانة"
+value="<?= $edit_row['maintenance_type'] ?? '' ?>" required>
 
-    <input type="number" name="cost" placeholder="التكلفة" step="0.01">
+<input type="number" step="0.01" name="cost" placeholder="التكلفة"
+value="<?= $edit_row['cost'] ?? '' ?>">
 
-    <textarea name="notes" placeholder="ملاحظات"></textarea>
+<textarea name="notes"><?= $edit_row['notes'] ?? '' ?></textarea>
 
-    <input type="date" name="maintenance_date" required>
+<input type="date" name="maintenance_date"
+value="<?= $edit_row['maintenance_date'] ?? '' ?>" required>
 
-    <button type="submit">حفظ</button>
+<button class="save" name="save">
+<?= $edit_row ? "تحديث" : "إضافة" ?>
+</button>
 
 </form>
+
+<!-- الجدول -->
+<table>
+<tr>
+    <th>السائق</th>
+    <th>الورشة</th>
+    <th>اللوحة</th>
+    <th>نوع الصيانة</th>
+    <th>التكلفة</th>
+    <th>التاريخ</th>
+    <th>إجراءات</th>
+</tr>
+
+<?php while($row = mysqli_fetch_assoc($result)){ ?>
+<tr>
+    <td><?= htmlspecialchars($row['driver_name']) ?></td>
+    <td><?= htmlspecialchars($row['vehicle_name']) ?></td>
+    <td><?= htmlspecialchars($row['plate_number']) ?></td>
+    <td><?= htmlspecialchars($row['maintenance_type']) ?></td>
+    <td><?= htmlspecialchars($row['cost']) ?></td>
+    <td><?= htmlspecialchars($row['maintenance_date']) ?></td>
+
+    <td>
+        <a class="edit" href="?edit=<?= $row['id'] ?>">تعديل</a>
+
+        <form method="post" style="display:inline;">
+            <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+            <button class="delete" onclick="return confirm('متأكد؟')">حذف</button>
+        </form>
+    </td>
+</tr>
+<?php } ?>
+
+</table>
 
 </div>
 

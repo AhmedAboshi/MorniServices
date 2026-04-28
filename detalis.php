@@ -186,9 +186,15 @@ textarea{
          <button class="gty_count_add">+</button>
         </div>
         <!-----submit---->
-        <div class="submit"><a href="">
-            <button class="add_cart" type="submit" name=""> ارسال لسلة
-</button>
+        <form action="cart.php" method="POST">
+    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
+    <input type="hidden" name="name" value="<?= $row['proname'] ?>">
+    <input type="hidden" name="price" value="<?= $row['proprice'] ?>">
+    <input type="hidden" name="img" value="<?= $row['proimg'] ?>">
+    <button type="submit" name="add" class="add_cart">
+        إضافة للسلة
+    </button>
+</form>
 </a>
 </div>
 <!----- end submit---->

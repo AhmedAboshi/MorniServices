@@ -9,72 +9,56 @@ include('file/header.php');
     <title>الاقسام</title>
 </head>
 <body>
-    <main>
-    <?php
-    @$section=$_GET['section'];
-    $query="SELECT * FROM product WHERE prosection ='$section'";
-    $result =mysqli_query($con,$query);
-    if(mysqli_num_rows($result)> 0){
-        while($row=mysqli_fetch_assoc($result)){
-            echo '
-            <div class="product">
-        <!----img---->
-        <div class="product_img">
-            <img src="uploads/img//' .$row['proimg'].'">
-            <span class="unvaiable">' .$row['prounv'].'</span>
-          <a href=""></a>
-        </div>
-                    <!----section---->
-        <div class="product_section">
-            
-            <a href="">' .$row['prosection'].'</a>
-        </div>
-        <!----name---->
-        <div class="product_name">
-            <a href="">' .$row['proname'].'</a>
-        </div>
-        <!----price---->
-        <div class="product_price">
-            <a href="">' .$row['proprice'].' &nbsp; السعر</a>
-        </div>
-        <!----description---->
-        <div class="product_description">
-            <a href="">' .$row['prodescrip'].'<i class="fa fa-truck" aria-hidden="true"></i>
-            لتفاصيل الخدمة اضغط هنا
-</a>
-        </div>
-        <!----Quantity---->
-        <div class="qty_input">
-         <button class="gty_count_mins">-</button>
-         <input type="number" id="quantity" name="" value="1" min="0" max="6">
-         <button class="gty_count_add">+</button>
-        </div><br>
-        <!---submit--->
-        <div class="submit">
-        <a href="">
-            <button class="addto_cart" type="submit" name="">
-                <i class="fa fa-truck" aria-hidden="true"></i>
-                &nbsp; &nbsp;
-                اضف الي خدماتي
-            </button>
-        </a>
-        </div>
+<main>
+
+<?php
+$section = $_GET['section'] ?? '';
+
+$query = "SELECT * FROM product WHERE prosection ='$section'";
+$result = mysqli_query($con, $query);
+
+if (mysqli_num_rows($result) > 0) {
+
+    while($row = mysqli_fetch_assoc($result)) {
+?>
+
+<div class="product">
+
+    <div class="product_img">
+        <img src="uploads/img/<?php echo $row['proimg']; ?>">
     </div>
-    
-            
-            ';
-        }
-    }else{
-        echo '<div class="notification">الخدمة التي تبحث عنها غير موجودة</div>';
+
+    <div class="product_name">
+        <?php echo $row['proname']; ?>
+    </div>
+
+    <div class="product_price">
+        <?php echo $row['proprice']; ?> السعر
+    </div>
+
+    <form action="cart.php" method="POST">
+
+        <input type="hidden" name="product_id" value="<?php echo $row['id']; ?>">
+        <input type="hidden" name="name" value="<?php echo $row['proname']; ?>">
+        <input type="hidden" name="price" value="<?php echo $row['proprice']; ?>">
+        <input type="hidden" name="img" value="<?php echo $row['proimg']; ?>">
+
+        <button type="submit" name="add" class="add_cart">
+            إضافة للسلة
+        </button>
+
+    </form>
+
+</div>
+
+<?php
     }
 
+} else {
+    echo '<div class="notification">الخدمة التي تبحث عنها غير موجودة</div>';
+}
 ?>
-            
 
-            <?php
-        
-    
-    ?>
 </main>
 </body>
 </html>

@@ -1,17 +1,17 @@
 <?php
+include('../include/core.php');
 
-session_start();
 include('../include/connected.php');
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">;
        
 
-    <title>التحكم باقسام الموقع</title>
+    <title><?= __('Manage Website Sections') ?></title>
 </head>
 <style>
 body {
@@ -29,6 +29,7 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
 }
 
 /* العنوان */
@@ -41,7 +42,7 @@ h2 {
 form {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 input[type="text"] {
@@ -49,6 +50,8 @@ input[type="text"] {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
+        
+
 }
 
 button {
@@ -58,6 +61,7 @@ button {
     color: #fff;
     border-radius: 8px;
     cursor: pointer;
+    margin-top: 25px;
 }
 
 button:hover {
@@ -100,30 +104,39 @@ tr:hover {
 .delete:hover {
     background: #c82333;
 }
+a{
+    margin-top:25px;
+}
 </style>
 
 <body>
      
-     
+     <a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
      <?php
      @$sectionname= $_POST['sectionname'];
      @$sacadd=$_POST['sacadd'];
      @$id=$_GET['id'];
-     if(isset($sacadd)){
-      if(empty($sectionname)){
-       echo '<script>alert ("الرجاء ملئ الحقل ");</script>';
-      }
-      elseif(strlen($sectionname) > 50){
-  echo '<script>alert ("اسم القسم يجب ألا يتجاوز 50 حرف");</script>';
+     if (isset($sacadd)) {
+
+    if (empty($sectionname)) {
+        echo "<script>alert('" . __('Please fill in the field') . "');</script>";
+
+    } elseif (strlen($sectionname) > 50) {
+        echo "<script>alert('" . __('The section name must not exceed 50 characters') . "');</script>";
+
+    } else {
+
+        $query = "INSERT INTO section (sectionname) VALUES ('$sectionname')";
+        $result = mysqli_query($con, $query);
+
+        echo "<script>
+                alert('" . __('The active section has been added') . "');
+                window.location.href = 'sectionadmin.php';
+              </script>";
+        exit();
+    }
 }
-      else{
-        $query="INSERT INTO section (sectionname) VALUES ('$sectionname')";
-        $result =mysqli_query($con, $query);
-        echo '<script>alert ("تم اضافة القسم بنجاح");</script>';
-      }
-       header("Location: sectionadmin.php");
-    exit();
-     }
     
      ?>
      <?php
@@ -132,9 +145,9 @@ tr:hover {
       $query="DELETE From section WHERE id='$id'";
        $delete= mysqli_query($con,$query);
        if(isset($delete)){
-          echo '<script>alert ("تم الحزف بنجاح");</script>';
+         echo "<script>alert('" . __('done Deleted successfully') . "');</script>";
     }else{
-      echo '<script>alert ("لم يتم الحزف");</script>';
+     echo "<script>alert('" . __('It was not deleted') . "');</script>";
       }
       header("Location: sectionadmin.php");
   exit();
@@ -145,18 +158,19 @@ tr:hover {
 <!-----section start---->
 <div class="content_sec">
 <form action="sectionadmin.php" method="post">
-  <label for="section">قسم جديد</label>
+  <label for="section"><?= __('New section') ?></label>
   <input type="text" name="sectionname" id="ectio">
   <br>
-  <button class="add" type="submit" name="sacadd">اضافة قسم</button>
+  <button class="add" type="submit" name="sacadd"><?= __('Add a section') ?></button>
 </form>
 <br>
 <!-----table start---->
-<table dir="rtl">
+<table dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
+
   <tr>
-<th>الرقم التسلسلي</th>
-<th>اسم القسم</th>
-<th>حزف القسم</th>
+<th><?= __('Serial Number') ?></th>
+<th><?= __('Section Name') ?></th>
+<th><?= __('Delete Section') ?></th>
   </tr>
   <tr>
     <?php
@@ -167,7 +181,7 @@ tr:hover {
       ?>
     <td><?php echo $row['id']; ?></td>
     <td><?php echo $row['sectionname']; ?></td>
-    <td><a href="sectionadmin.php? id= <?php echo $row['id']; ?>"><button type="submit" class="delete">حزف القسم</button></a></td>
+    <td><a href="sectionadmin.php? id= <?php echo $row['id']; ?>"><button type="submit" class="delete"><?= __('Delete Section') ?></button></a></td>
   </tr>
 
   

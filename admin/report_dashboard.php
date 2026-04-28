@@ -102,6 +102,17 @@
         <h3>تقرير الزيوت</h3>
         <a href="oile_report.php">تقرير الزيوت</a>
     </div>
+
+    
+
+
+ <div class="card">
+        <div class="icon">🧾</div>
+        <h3>تقرير تكاليف السائقين</h3>
+        <a href="driverviewcost.php">تقرير تكاليف السائقين</a>
+</div>
+
+
     <!-- الفواتير  -->
     <div class="card">
         <div class="icon">🧾</div>
