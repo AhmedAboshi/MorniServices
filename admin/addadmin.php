@@ -1,107 +1,161 @@
-
 <?php
 session_start();
+include('../include/core.php');
 include('../include/connected.php');
+
+
 
 if(isset($_POST['proadd'])){
 
-    $email    = mysqli_real_escape_string($con, $_POST['email']);
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
 
     if(empty($email) || empty($password)){
-        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+        $msg = t('fill_fields');
     }
     elseif(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-        echo "<script>alert('الإيميل غير صحيح');</script>";
+        $msg = t('invalid_email');
     }
     else{
 
-        // 🔐 تشفير كلمة المرور
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        // التحقق من تكرار الإيميل
+        $check = $con->prepare("SELECT id FROM admin WHERE email=?");
+        $check->bind_param("s", $email);
+        $check->execute();
+        $res = $check->get_result();
 
-        $query = "INSERT INTO admin (email, password) 
-                  VALUES ('$email', '$hashed_password')";
+        if($res->num_rows > 0){
+            $msg = t('email_exists');
+        } else {
 
-        if(mysqli_query($con, $query)){
-            echo "<script>alert('تم إضافة المستخدم بنجاح');</script>";
-        }else{
-            echo "<script>alert('حدث خطأ');</script>";
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            $stmt = $con->prepare("INSERT INTO admin (email, password) VALUES (?,?)");
+            $stmt->bind_param("ss", $email, $hashed_password);
+
+            if($stmt->execute()){
+                header("Location: adduser.php?success=1");
+                exit;
+            } else {
+                $msg = t('error');
+            }
         }
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
-<title>إضافة مستخدم</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?= t('add_admin') ?></title>
 
 <style>
 body{
-    font-family: 'Cairo';
+    font-family:'Cairo',sans-serif;
     background:#f4f6f9;
 }
 
-.form_product{
-    width: 40%;
-    margin: 60px auto;
-    padding: 20px;
+.form-box{
+    width:40%;
+    margin:60px auto;
+    padding:25px;
     background:#fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-radius:10px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
 h1{
     text-align:center;
+    margin-bottom:20px;
 }
 
 label{
     display:block;
-    margin-top:10px;
+    margin-top:12px;
+    font-weight:bold;
 }
 
 input{
     width:100%;
-    padding:10px;
+    padding:12px;
     margin-top:5px;
-    border:1px solid #ccc;
-    border-radius:5px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    outline:none;
 }
 
 .button{
-    margin-top:15px;
-    background:#3498db;
-    color:#fff;
+    width:100%;
+    margin-top:20px;
+    padding:14px;
+    background:linear-gradient(135deg,#3498db,#2980b9);
+    color:white;
     border:none;
-    padding:12px;
+    border-radius:8px;
     cursor:pointer;
+    font-size:16px;
+    transition:.3s;
 }
 
 .button:hover{
-    background:#2980b9;
+    transform:translateY(-2px);
+}
+
+.message{
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.success{
+    color:green;
+}
+
+.error{
+    color:red;
+}
+
+.lang{
+    text-align:center;
+    margin-top:20px;
 }
 </style>
 </head>
-
 <body>
 
-<div class="form_product">
-<h1>إضافة مستخدم</h1>
+<div class="lang">
+    <a href="?lang=ar">🇸🇦 عربي</a> |
+    <a href="?lang=en">🇬🇧 English</a>
+</div>
+
+<div class="form-box">
+
+<h1><?= t('add_admin') ?></h1>
+
+<?php if(isset($_GET['success'])): ?>
+    <p class="message success"><?= t('success_add') ?></p>
+<?php endif; ?>
+
+<?php if(!empty($msg)): ?>
+    <p class="message error"><?= $msg ?></p>
+<?php endif; ?>
 
 <form method="post">
 
-<label>الإيميل</label>
-<input type="email" name="email">
+<label><?= t('email') ?></label>
+<input type="email" name="email" required>
 
-<label>كلمة المرور</label>
-<input type="password" name="password">
+<label><?= t('password') ?></label>
+<input type="password" name="password" required>
 
-<button class="button" name="proadd">إضافة</button>
+<button class="button" name="proadd">
+    <?= t('add') ?>
+</button>
 
 </form>
 </div>
 
 </body>
 </html>
-

@@ -1,6 +1,9 @@
 
 <?php
-session_start();
+ session_start();
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+include('../include/core.php');
 include('../include/connected.php');
 
 if(isset($_POST['proadd'])){
@@ -20,13 +23,13 @@ if(isset($_POST['proadd'])){
     $ext = strtolower(pathinfo($imgname, PATHINFO_EXTENSION));
 
     if(empty($proname) || empty($proprice) || empty($prosection) || empty($prodescrip)){
-        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+         echo "<script>alert('".t('fill_fields')."');</script>";
     }
     elseif(!in_array($ext, $allowed)){
-        echo "<script>alert('نوع الصورة غير مسموح');</script>";
+         echo "<script>alert('".t('image_error')."');</script>";
     }
     elseif($size > 2*1024*1024){
-        echo "<script>alert('حجم الصورة كبير (أقصى 2MB)');</script>";
+        echo "<script>alert('".t('image_size')."');</script>";
     }
     else{
 
@@ -39,19 +42,19 @@ if(isset($_POST['proadd'])){
         ('$proname','$newName','$proprice','$prosection','$prodescrip','$prounv')";
 
         if(mysqli_query($con,$query)){
-            echo "<script>alert('تم إضافة الخدمة بنجاح');</script>";
+           echo "<script>alert('".t('success')."');</script>";
         }else{
-            echo "<script>alert('حدث خطأ');</script>";
+            echo "<script>alert('".t('error')."');</script>";
         }
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
-<title>إضافة خدمة</title>
+<title><?= t('add_service') ?></title>
 
 <style>
 body{
@@ -86,43 +89,58 @@ input, select{
 }
 
 .button{
-    margin-top:15px;
-    background:#3498db;
-    color:#fff;
-    border:none;
-    padding:12px;
-    cursor:pointer;
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, #4CAF50, #2ecc71);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .button:hover{
-    background:#2980b9;
+    background: linear-gradient(135deg, #43a047, #27ae60);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.button:active{
+    transform: scale(0.97);
 }
 </style>
 
 </head>
 <body>
 
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
+
 <div class="form_product">
-<h1>إضافة خدمة</h1>
+<h1><?= t('add_service') ?></h1>
 
 <form method="post" enctype="multipart/form-data">
 
-<label>عنوان الخدمة</label>
+<label><?= t('service_title') ?></label>
 <input type="text" name="proname">
 
-<label>صورة الخدمة</label>
+<label><?= t('service_image') ?></label>
 <input type="file" name="proimg">
 
-<label>السعر</label>
+<label><?= t('price') ?></label>
 <input type="text" name="proprice">
 
-<label>التفاصيل</label>
+<label><?= t('details') ?></label>
 <input type="text" name="prodescrip">
 
-<label>التوفر</label>
+<label><?= t('availability') ?></label>
 <input type="text" name="prounv">
 
-<label>القسم</label>
+<label><?= t('section') ?></label>
 <select name="prosection">
 <?php
 $res = mysqli_query($con,"SELECT * FROM section");
@@ -132,7 +150,7 @@ while($row = mysqli_fetch_assoc($res)){
 ?>
 </select>
 
-<button class="button" name="proadd">إضافة</button>
+<button class="button" name="proadd"><?= t('add') ?></button>
 
 </form>
 </div>

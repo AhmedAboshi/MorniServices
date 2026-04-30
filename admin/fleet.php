@@ -1,6 +1,7 @@
 
 <?php
 session_start();
+include('../include/core.php');
 include('../include/connected.php');
 
 /* 🔍 البحث */
@@ -11,7 +12,7 @@ if ($search != '') {
     $query = "SELECT * FROM fleet 
               WHERE driver LIKE '%$search_safe%' 
               OR plate LIKE '%$search_safe%' 
-              OR typefleet LIKE '%$search_safe%'";
+              OR classify LIKE '%$search_safe%'";
 } else {
     $query = "SELECT * FROM fleet";
 }
@@ -28,11 +29,11 @@ if (isset($_GET['id'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أسطول الشركة</title>
+<title><?= t('fleet_title') ?></title>
 
 <style>
 body {
@@ -123,11 +124,14 @@ img {
 
 <body>
 
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
+
 <!-- 🔍 البحث -->
 <div class="search-box">
 <form method="GET">
-<input type="text" name="search" placeholder="ابحث عن مركبة..." value="<?php echo htmlspecialchars($search); ?>">
-<button type="submit">بحث</button>
+<input type="text" name="search" placeholder="<?= t('search_vehicle') ?>" value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit"><?= t('search') ?></button>
 </form>
 </div>
 
@@ -135,17 +139,17 @@ img {
 <table dir="rtl">
 <thead>
 <tr>
-<th>رقم</th>
-<th>الصورة</th>
-<th>المزود</th>
-<th>اللوحة</th>
-<th>الطراز</th>
-<th>النوع</th>
-<th>الموديل</th>
-<th>اللون</th>
-<th>العمل</th>
-<th>حذف</th>
-<th>تعديل</th>
+<th><?= t('id') ?></th>
+<th><?= t('image') ?></th>
+<th><?= t('driver') ?></th>
+<th><?= t('plate') ?></th>
+<th><?= t('type') ?></th>
+<th><?= t('class') ?></th>
+<th><?= t('model') ?></th>
+<th><?= t('color') ?></th>
+<th><?= t('work') ?></th>
+<th><?= t('delete') ?></th>
+<th><?= t('edit') ?></th>
 </tr>
 </thead>
 
@@ -156,7 +160,9 @@ img {
 <td><?php echo $row['id']; ?></td>
 
 <td>
-<img src="../fleetimg/img/<?php echo $row['imgfleet']; ?>">
+<a href="fleet_details.php?id=<?= $row['id'] ?>">
+    <img src="../fleetimg/img/<?= $row['imgfleet']; ?>">
+</a>
 </td>
 
 <td><?php echo $row['driver']; ?></td>
@@ -169,14 +175,14 @@ img {
 
 <td>
 <a href="fleet.php?id=<?php echo $row['id']; ?>" 
-onclick="return confirm('هل أنت متأكد من حذف المركبة؟')">
+onclick="return confirm('?<?= t('confirm_delete_vehicle') ?>')">
 <button class="delete">حذف</button>
 </a>
 </td>
 
 <td>
 <a href="updatefleet.php?id=<?php echo $row['id']; ?>">
-<button class="update">تعديل</button>
+<button class="update"><?= t('delete') ?></button>
 </a>
 </td>
 

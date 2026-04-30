@@ -21,3 +21,8 @@ function __($key){
     global $translations, $lang;
     return $translations[$lang][$key] ?? $key;
 }
+
+function t($key){
+    global $translations, $lang;
+    return $translations[$lang][$key] ?? $key;
+}

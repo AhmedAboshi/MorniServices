@@ -1,6 +1,7 @@
 
 <?php
 session_start();
+include('../include/core.php');
 include('../include/connected.php');
 
 /* 🔍 البحث */
@@ -27,11 +28,11 @@ if (isset($_GET['id'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إدارة الخدمات</title>
+<title><?= __('Service management') ?></title>
 
 <style>
 body {
@@ -121,12 +122,13 @@ img {
 </head>
 
 <body>
-
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
 <!-- 🔍 البحث -->
 <div class="search-box">
 <form method="GET">
-<input type="text" name="search" placeholder="ابحث عن خدمة..." value="<?php echo htmlspecialchars($search); ?>">
-<button type="submit">بحث</button>
+<input type="text" name="search" placeholder="Looking for a service..." value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit"><?= __('search') ?></button>
 </form>
 </div>
 
@@ -134,15 +136,15 @@ img {
 <table dir="rtl">
 <thead>
 <tr>
-<th>رقم</th>
-<th>الصورة</th>
-<th>الاسم</th>
-<th>السعر</th>
-<th>القسم</th>
-<th>التفاصيل</th>
-<th>الحالة</th>
-<th>حذف</th>
-<th>تعديل</th>
+<th><?= __('Serial Number') ?></th>
+<th><?= __('image') ?></th>
+<th><?= __('Service name') ?></th>
+<th><?= __('price') ?></th>
+<th><?= __('Section Name') ?></th>
+<th><?= __('details') ?></th>
+<th><?= __('status') ?></th>
+<th><?= __('delete') ?></th>
+<th><?= __('update') ?></th>
 </tr>
 </thead>
 
@@ -164,14 +166,14 @@ img {
 
 <td>
 <a href="services.php?id=<?php echo $row['id']; ?>" 
-onclick="return confirm('هل أنت متأكد من الحذف؟')">
-<button class="delete">حذف</button>
+onclick="return confirm(<?= __('Are you sure about deleting it?') ?>)">
+<button class="delete"><?= __('delete') ?></button>
 </a>
 </td>
 
 <td>
 <a href="update.php?id=<?php echo $row['id']; ?>">
-<button class="update">تعديل</button>
+<button class="update"><?= __('update') ?></button>
 </a>
 </td>
 

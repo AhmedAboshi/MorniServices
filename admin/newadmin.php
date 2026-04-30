@@ -97,7 +97,7 @@ li a i {
 <body>
 
 <div class="container">
-    <h1><?= __('Control panel') ?></h1>
+    <h1><?= __('control_panel') ?></h1>
        
     <div class="cards">
      

@@ -1,6 +1,7 @@
 
 <?php
 session_start();
+include('../include/core.php');
 include('../include/connected.php');
 
 if(isset($_POST['fleetadd'])){
@@ -22,13 +23,13 @@ if(isset($_POST['fleetadd'])){
     $ext = strtolower(pathinfo($imgname, PATHINFO_EXTENSION));
 
     if(empty($driver) || empty($plate) || empty($typefleet) || empty($classify) || empty($model)){
-        echo "<script>alert('يرجى تعبئة جميع الحقول');</script>";
+        echo "<script>alert('".t('fill_fields')."');</script>";
     }
     elseif(!in_array($ext, $allowed)){
-        echo "<script>alert('نوع الصورة غير مسموح');</script>";
+        echo "<script>alert('".t('image_error')."');</script>";
     }
     elseif($size > 2*1024*1024){
-        echo "<script>alert('حجم الصورة كبير (أقصى 2MB)');</script>";
+        echo "<script>alert('".t('image_size')."');</script>";
     }
     else{
 
@@ -51,10 +52,10 @@ if(isset($_POST['fleetadd'])){
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
-<title>إضافة مركبة</title>
+<title><?= t('add_vehicle') ?></title>
 
 <style>
 body{
@@ -89,56 +90,61 @@ input, select{
 }
 
 .button{
-    margin-top:15px;
-    background:#3498db;
+    width:100%;
+    margin-top:20px;
+    padding:14px;
+    background:linear-gradient(135deg,#3498db,#2980b9);
     color:#fff;
     border:none;
-    padding:12px;
+    border-radius:8px;
     cursor:pointer;
+    transition:0.3s;
 }
 
 .button:hover{
     background:#2980b9;
+    transform:translateY(-2px);
 }
 </style>
 
 </head>
 <body>
 
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
+
 <div class="form_product">
-<h1>إضافة مركبة</h1>
+<h1><?= t('add_vehicle') ?></h1>
 
-<form method="post" enctype="multipart/form-data">
-
-<label>المزود</label>
+<label><?= t('driver') ?></label>
 <input type="text" name="driver">
 
-<label>صورة المركبة</label>
+<label><?= t('vehicle_image') ?></label>
 <input type="file" name="imgfleet">
 
-<label>لوحة المركبة</label>
+<label><?= t('plate') ?></label>
 <input type="text" name="plate">
 
-<label>طراز المركبة</label>
+<label><?= t('type') ?></label>
 <input type="text" name="typefleet">
 
-<label>نوع المركبة</label>
+<label><?= t('class') ?></label>
 <input type="text" name="classify">
 
-<label>موديل المركبة</label>
+<label><?= t('model') ?></label>
 <input type="text" name="model">
 
-<label>لون المركبة</label>
+<label><?= t('color') ?></label>
 <input type="text" name="colorfleet">
 
-<label>مدينة العمل</label>
+<label><?= t('work_city') ?></label>
 <select name="work">
-    <option value="الرياض">الرياض</option>
-    <option value="جده">جده</option>
-    <option value="الدمام">الدمام</option>
+    <option value="riyadh"><?= $lang=='ar' ? 'الرياض' : 'Riyadh' ?></option>
+    <option value="jeddah"><?= $lang=='ar' ? 'جدة' : 'Jeddah' ?></option>
+    <option value="dammam"><?= $lang=='ar' ? 'الدمام' : 'Dammam' ?></option>
 </select>
 
-<button class="button" name="fleetadd">إضافة</button>
+<button class="button" name="fleetadd"><?= t('add') ?></button>
 
 </form>
 </div>

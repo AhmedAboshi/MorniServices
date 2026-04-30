@@ -1,6 +1,7 @@
 
 <?php
 session_start();
+include('../include/core.php');
 include('../include/connected.php');
 
 /* 🔍 البحث */
@@ -27,11 +28,11 @@ if (isset($_GET['id'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إدارة العملاء</title>
+<title><?= t('title') ?></title>
 
 <style>
 body {
@@ -119,14 +120,19 @@ tr:nth-child(even){
 
 <body>
 
+<a href="?lang=ar">🇸🇦 عربي</a>
+<a href="?lang=en">🇬🇧 English</a>
+
 <!-- ➕ إضافة عميل -->
-<a href="adduser.php" class="add-btn">➕ إضافة عميل</a>
+<a href="adduser.php" class="add-btn">➕ <?= t('add_user') ?></a>
 
 <!-- 🔍 البحث -->
+
 <div class="search-box">
+
 <form method="GET">
-<input type="text" name="search" placeholder="ابحث عن عميل..." value="<?php echo htmlspecialchars($search); ?>">
-<button type="submit">بحث</button>
+<input type="text" name="search" placeholder="<?= t('search_placeholder') ?>" value="<?php echo htmlspecialchars($search); ?>">
+<button type="submit"><?= t('search') ?></button>
 </form>
 </div>
 
@@ -134,11 +140,11 @@ tr:nth-child(even){
 <table dir="rtl">
 <thead>
 <tr>
-<th>رقم</th>
-<th>اسم المستخدم</th>
-<th>البريد الإلكتروني</th>
-<th>إجراءات</th>
-<th>تعديل</th>
+<th><?= t('id') ?></th>
+<th><?= t('username') ?></th>
+<th><?= t('email') ?></th>
+<th><?= t('actions') ?></th>
+<th><?= t('edit') ?></th>
 </tr>
 </thead>
 
@@ -152,14 +158,14 @@ tr:nth-child(even){
 
 <td>
 <a href="userview.php?id=<?php echo $row['id']; ?>" 
-onclick="return confirm('هل أنت متأكد من حذف المستخدم؟')">
-<button class="delete">حذف</button>
+onclick="return confirm('<?= t('confirm_delete') ?>')">
+<button class="delete"><?= t('delete') ?></button>
 </a>
 </td>
 
 <td>
 <a href="updateuser.php?id=<?php echo $row['id']; ?>">
-<button class="update">تعديل</button>
+<button class="update"><?= t('edit') ?></button>
 </a>
 </td>
 
