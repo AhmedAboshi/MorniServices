@@ -1,0 +1,85 @@
+# =========================================================
+
+# AlSharqPlatform - Git Ignore
+
+# =========================================================
+
+# Environment / Secrets
+
+.env
+.env.*
+!.env.example
+
+# Google OAuth credentials
+
+credentials.json
+google-credentials.json
+client_secret*.json
+
+# Private configuration
+
+config.php
+database.php
+db.php
+
+# Local development / XAMPP
+
+xampp/
+*.log
+error_log
+error_log.txt
+
+# IDE
+
+.vscode/
+.idea/
+
+# OS files
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.cache
+
+# Composer dependencies
+
+vendor/
+admin/vendor/
+
+# Uploaded user files
+
+uploads/*
+upload/*
+fleetimg/*
+
+# Admin uploaded files
+
+admin/uploads/*
+admin/driverimge/*
+admin/sound/*
+
+# Generated files
+
+*.pdf
+*.xlsx
+*.xls
+*.csv
+
+# Local database backups
+
+*.sql
+*.sql.gz
+
+# Test / debug files
+
+test_*.php
+debug_*.php
+phpinfo.php

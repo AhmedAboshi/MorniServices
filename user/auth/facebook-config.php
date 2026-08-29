@@ -1,0 +1,9 @@
+<?php
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+$fb = new \Facebook\Facebook([
+  'app_id' => 'YOUR_APP_ID',
+  'app_secret' => 'YOUR_APP_SECRET',
+  'default_graph_version' => 'v19.0',
+]);

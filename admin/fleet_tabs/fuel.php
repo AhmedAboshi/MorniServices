@@ -1,0 +1,3 @@
+<div class="text-center p-5 text-muted">
+    قريباً...
+</div>

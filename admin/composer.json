@@ -1,0 +1,6 @@
+{
+    "require": {
+        "google/apiclient": "^2.19",
+        "endroid/qr-code": "^6.0"
+    }
+}

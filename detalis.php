@@ -1,257 +1,1122 @@
 <?php
-include('file/header.php');
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفاصيل الخدمة</title>
-    <link rel="stylesheet" href="style.css">
-</head>
 
+session_start();
+
+if(!isset($_SESSION['user_id'])){
+    echo '<script>
+    alert("يرجى تسجيل الدخول أولاً");
+    window.location.href="user/login.php";
+    </script>';
+    exit();
+}
+
+include('file/header.php');
+
+
+/* =====================================================
+   التحقق من ID الخدمة
+===================================================== */
+
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if($id <= 0){
+    echo '<script>
+    alert("الخدمة غير موجودة");
+    window.location.href="index.php";
+    </script>';
+    exit();
+}
+
+
+/* =====================================================
+   جلب الخدمة
+===================================================== */
+
+$stmt = $con->prepare("
+    SELECT *
+    FROM product
+    WHERE id = ?
+    LIMIT 1
+");
+
+$stmt->bind_param("i", $id);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if($result->num_rows === 0){
+
+    echo '<script>
+    alert("الخدمة غير موجودة");
+    window.location.href="index.php";
+    </script>';
+
+    exit();
+}
+
+$product = $result->fetch_assoc();
+
+
+/* =====================================================
+   إضافة تقييم
+===================================================== */
+
+$comment_success = '';
+$comment_error = '';
+
+if(
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    &&
+    isset($_POST['add_comment'])
+){
+
+    $comment = trim($_POST['comment'] ?? '');
+
+    if($comment === ''){
+
+        $comment_error = "الرجاء كتابة تقييمك.";
+
+    }else{
+
+        $username = $_SESSION['username'] ?? 'عميل';
+
+        /*
+         * ملاحظة:
+         * نحافظ على جدول comments الحالي
+         * لأن الأعمدة التي نعرفها حاليًا هي:
+         * usename / comment
+         */
+
+        $stmtComment = $con->prepare("
+            INSERT INTO comments (usename, comment)
+            VALUES (?, ?)
+        ");
+
+        if($stmtComment){
+
+            $stmtComment->bind_param(
+                "ss",
+                $username,
+                $comment
+            );
+
+            if($stmtComment->execute()){
+
+                $comment_success =
+                    "تم إرسال تقييمك بنجاح.";
+
+            }else{
+
+                $comment_error =
+                    "حدث خطأ أثناء إرسال التقييم.";
+
+            }
+
+        }else{
+
+            $comment_error =
+                "تعذر تجهيز عملية التقييم.";
+
+        }
+    }
+}
+
+?>
 
 <style>
-    main{
-        display:flex;
-        flex-wrap: wrap;
-    }
-    .container{
-        width: 90%;
-        height: auto;
-        margin: 20px auto;
-        border-radius:8px;  
-    }
-    .product_img{
-         width:50%;
-    height:400px;
-    }
-    .product_img img{
-        width: 350px;
-        height: 400px;
-        margin-left:40px;
-        margin-bottom:20px;
-    }
-    .product_info{
-        float: right;
-        width: 400px;
-        height: 400px;
-        text-align: right;
-        font-size:20px;
-        margin-right:50px;
-        padding:10px 10px;
-        margin-top:30px;
-    }
-    .product_title{
-        margin:10px 0;
-    }
-    .product_price{
-        color: #e67e22;
-        margin: 10px 0;
-    }
-    .product_description{
-        font-size: 16px;
-        text-align: center;
-        margin:10px 0;
-    }
-   .add_cart{
-     width: 100%;
-    height: 35px;
-    background-color:  #e67e22;
-    margin-top: 10px;
-    padding: 10px 29px;
-    cursor: pointer;
+
+/* =====================================================
+   صفحة التفاصيل
+===================================================== */
+
+.details-page{
+    width:100%;
+    max-width:1200px;
+    margin:30px auto;
+    padding:0 20px;
 }
 
-.add_cart:hover{
-    background-color: #e67e22;
+
+/* =====================================================
+   بطاقة التفاصيل
+===================================================== */
+
+.details-card{
+    background:#fff;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+    overflow:hidden;
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+
+    min-height:450px;
 }
-.recently_added{
-    float:right;
-    width: 30%;
-    margin-top:30px;
-    border-radius: 8px;
-    padding:10px 10px;
-    box-shadow: 0 5px 10px rgba(0,0,0,1);
+
+
+/* =====================================================
+   الصورة
+===================================================== */
+
+.details-image{
+    background:#f6f8fa;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:25px;
+
+    min-height:450px;
 }
-.added_img img{
-    float:right;
-    margin: 10px 10px;
-    width: 70px;
-    height:70px;
-    margin-right:5px;
-    border-radius:10px;
+
+.details-image img{
+
+    width:100%;
+    max-width:500px;
+
+    height:420px;
+
+    object-fit:cover;
+
+    border-radius:15px;
+
+    display:block;
 }
-.comment_info{
-    float: left; 
-    height: auto;
-     width: 50%;
-    margin:20px 10px;
-    box-shadow: 0 5px 10px rgba(0,0,0,1);
+
+
+/* =====================================================
+   معلومات الخدمة
+===================================================== */
+
+.details-info{
+
+    padding:40px;
+
+    display:flex;
+    flex-direction:column;
+
+    justify-content:center;
 }
-   h5{
-    font-size: 20px;
-    margin-top:  20px;
-    color: black;
-   text-align: left;
+
+
+.details-title{
+
+    font-size:30px;
+
+    color:#1f2937;
+
+    margin-bottom:15px;
+
 }
-textarea{
-    text-align: center;
-    width: 600px;
-    margin-top:20px;
-    margin-left:50px;
-    margin-bottom: 10px;
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius: 10px;
-    height: 100px;
+
+
+.details-category{
+
+    display:inline-block;
+
+    width:max-content;
+
+    background:#e9f9fb;
+
+    color:#008fa3;
+
+    padding:7px 14px;
+
+    border-radius:8px;
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    margin-bottom:20px;
+
 }
-.add_comment{
-     width: 100%;
-    height: 35px;
-    background-color:  #e67e22;
-    margin-top: 10px;
-    padding: 10px 29px;
-    cursor: pointer;
+
+
+.details-price{
+
+    font-size:26px;
+
+    color:#e53935;
+
+    font-weight:bold;
+
+    margin-bottom:20px;
+
 }
-.add_comment:hover{
-    background-color: #e67e22;
+
+
+.details-description-title{
+
+    font-size:18px;
+
+    color:#374151;
+
+    margin-bottom:8px;
+
 }
-.comments{
-   text-align: center;
-    width: 600px;
-    margin-top:20px;
-    margin-left:50px;
-    margin-bottom: 10px;
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius: 10px;
-    height: 600px;
+
+
+.details-description{
+
+    color:#6b7280;
+
+    line-height:1.9;
+
+    font-size:15px;
+
+    margin-bottom:25px;
+
 }
-.comment{
-    color: black;
-    font-size: larger;
-    margin: 5px 5px;
-    text-align: center;
-    padding:10px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    overflow: scroll;
-    text-overflow: ellipsis;
+
+
+/* =====================================================
+   الكمية
+===================================================== */
+
+.details-quantity{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-bottom:20px;
+
 }
-.usename{
-    padding: 4px 5px;
-    text-align: right;
-    color: blue;
+
+
+.details-quantity button{
+
+    width:40px;
+
+    height:40px;
+
+    border:1px solid #ddd;
+
+    background:#f5f5f5;
+
+    border-radius:8px;
+
     font-size:20px;
+
+    cursor:pointer;
+
 }
-</style>
-<body>
-    <?php
-    @$id =$_GET['id'];
-    if(isset($_GET['id'])){
-        $query ="SELECT * FROM product WHERE id='$id'";
-        $result = mysqli_query($con,$query);
-        $row=mysqli_fetch_assoc($result);
+
+
+.details-quantity button:hover{
+
+    background:#e9f9fb;
+
+}
+
+
+.details-quantity input{
+
+    width:65px;
+
+    height:40px;
+
+    text-align:center;
+
+    border:1px solid #ddd;
+
+    border-radius:8px;
+
+    font-size:16px;
+
+}
+
+
+/* =====================================================
+   زر السلة
+===================================================== */
+
+.details-cart-btn{
+
+    width:100%;
+
+    height:50px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#00a9bd;
+
+    color:#fff;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+
+.details-cart-btn:hover{
+
+    background:#008fa3;
+
+}
+
+
+/* =====================================================
+   الخدمات الحديثة
+===================================================== */
+
+.recent-services{
+
+    margin-top:25px;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    box-shadow:0 4px 15px rgba(0,0,0,.07);
+
+}
+
+
+.section-title{
+
+    font-size:20px;
+
+    color:#222;
+
+    margin-bottom:18px;
+
+}
+
+
+.recent-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(5,1fr);
+
+    gap:15px;
+
+}
+
+
+.recent-item{
+
+    background:#f8fafc;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    text-decoration:none;
+
+    transition:.2s;
+
+}
+
+
+.recent-item:hover{
+
+    transform:translateY(-3px);
+
+}
+
+
+.recent-item img{
+
+    width:100%;
+
+    height:120px;
+
+    object-fit:cover;
+
+    display:block;
+
+}
+
+
+.recent-name{
+
+    padding:10px;
+
+    color:#333;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    text-align:center;
+
+}
+
+
+/* =====================================================
+   التقييمات
+===================================================== */
+
+.reviews-section{
+
+    margin-top:25px;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:25px;
+
+    box-shadow:0 4px 15px rgba(0,0,0,.07);
+
+}
+
+
+.review-form textarea{
+
+    width:100%;
+
+    min-height:110px;
+
+    resize:vertical;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    font-family:Tahoma;
+
+    font-size:14px;
+
+    margin-bottom:10px;
+
+}
+
+
+.review-form button{
+
+    width:160px;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#00a9bd;
+
+    color:#fff;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+}
+
+
+.review-success{
+
+    background:#ecfdf5;
+
+    color:#15803d;
+
+    padding:10px;
+
+    border-radius:8px;
+
+    margin-bottom:15px;
+
+}
+
+
+.review-error{
+
+    background:#fef2f2;
+
+    color:#dc2626;
+
+    padding:10px;
+
+    border-radius:8px;
+
+    margin-bottom:15px;
+
+}
+
+
+.reviews-list{
+
+    margin-top:25px;
+
+}
+
+
+.review{
+
+    border:1px solid #eee;
+
+    border-radius:12px;
+
+    padding:15px;
+
+    margin-bottom:12px;
+
+    background:#fafafa;
+
+}
+
+
+.review-user{
+
+    color:#2563eb;
+
+    font-weight:bold;
+
+    margin-bottom:7px;
+
+}
+
+
+.review-text{
+
+    color:#444;
+
+    line-height:1.8;
+
+}
+
+
+/* =====================================================
+   الجوال
+===================================================== */
+
+@media(max-width:800px){
+
+    .details-card{
+
+        grid-template-columns:1fr;
+
     }
 
 
-?>
- <main>
-<!------start img---->
-<div class="container">
-<div class="product_img">
-<img src="uploads/img//<?PHP echo $row['proimg'];?>">
-</div>
-<!------end img---->
-<!------start information---->
-<div class="product_info">
-    <h1 class="product_title"><?PHP echo @$row['proname'];?></h1>
-    <h2 class="product_price"><?PHP echo @$row['proprice'];?>$ &nbsp; السعر</h2><br>
-    <!----section---->
-        <div class="product_section">
-            <a href="section.php?section=<?php echo $row['prosection'];?>">
-                <?PHP echo $row['prosection'];?></a>
-        </div>
-             <!---- end section---->
+    .details-image{
 
-    <h4 class="product_description">تفاصيل الخدمة</h4>
-    <p><?PHP echo $row['prodescrip'];?></p>
-    <!----Quantity---->
-        <div class="qty_input">
-         <button class="gty_count_mins">-</button>
-         <input type="number" id="quantity" name="" value="1" min="0" max="6">
-         <button class="gty_count_add">+</button>
-        </div>
-        <!-----submit---->
-        <form action="cart.php" method="POST">
-    <input type="hidden" name="product_id" value="<?= $row['id'] ?>">
-    <input type="hidden" name="name" value="<?= $row['proname'] ?>">
-    <input type="hidden" name="price" value="<?= $row['proprice'] ?>">
-    <input type="hidden" name="img" value="<?= $row['proimg'] ?>">
-    <button type="submit" name="add" class="add_cart">
-        إضافة للسلة
-    </button>
-</form>
-</a>
-</div>
-<!----- end submit---->
-<!------end information---->
-</div>
-</div>
-</main>
+        min-height:auto;
 
-    <div class="recently_added">
-        <h4>خدمات حديثة</h4>
-        <?php
-        $query = "SELECT * FROM product WHERE id!='$id' ORDER BY rand() LIMIT 5";
-        $result = mysqli_query($con,$query);
-        while($row = mysqli_fetch_assoc($result)){
-            echo '<div class="added_img">
-                    <a href="detalis.php?id='.$row['id'].'">
-                        <img src="uploads/img/'.$row['proimg'].'" alt="">
-                    </a>
-                  </div>';
-        }
-        ?>
+        padding:15px;
+
+    }
+
+
+    .details-image img{
+
+        height:300px;
+
+    }
+
+
+    .details-info{
+
+        padding:25px;
+
+    }
+
+
+    .details-title{
+
+        font-size:24px;
+
+    }
+
+
+    .recent-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+
+@media(max-width:450px){
+
+    .details-page{
+
+        padding:0 10px;
+
+        margin-top:15px;
+
+    }
+
+
+    .details-image img{
+
+        height:230px;
+
+    }
+
+
+    .details-info{
+
+        padding:18px;
+
+    }
+
+
+    .details-title{
+
+        font-size:21px;
+
+    }
+
+
+    .details-price{
+
+        font-size:22px;
+
+    }
+
+
+    .recent-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+        gap:8px;
+
+    }
+
+
+    .recent-item img{
+
+        height:100px;
+
+    }
+
+}
+
+</style>
+
+
+<div class="details-page">
+
+
+    <!-- =================================================
+         تفاصيل الخدمة
+    ================================================== -->
+
+    <div class="details-card">
+
+
+        <!-- الصورة -->
+
+        <div class="details-image">
+
+            <img
+                src="uploads/img/<?= htmlspecialchars($product['proimg']) ?>"
+                alt="<?= htmlspecialchars($product['proname']) ?>"
+            >
+
+        </div>
+
+
+        <!-- المعلومات -->
+
+        <div class="details-info">
+
+
+            <h1 class="details-title">
+
+                <?= htmlspecialchars($product['proname']) ?>
+
+            </h1>
+
+
+            <!-- القسم -->
+
+            <a
+                class="details-category"
+                href="section.php?section=<?= urlencode($product['prosection']) ?>"
+            >
+
+                <?= htmlspecialchars($product['prosection']) ?>
+
+            </a>
+
+
+            <!-- السعر -->
+
+            <div class="details-price">
+
+                <?= number_format((float)$product['proprice'],2) ?>
+
+                ريال
+
+            </div>
+
+
+            <!-- الوصف -->
+
+            <div class="details-description-title">
+
+                تفاصيل الخدمة
+
+            </div>
+
+
+            <div class="details-description">
+
+                <?= nl2br(htmlspecialchars($product['prodescrip'])) ?>
+
+            </div>
+
+
+            <!-- إضافة للسلة -->
+
+            <form
+                action="cart.php"
+                method="POST"
+            >
+
+
+                <div class="details-quantity">
+
+
+                    <button
+                        type="button"
+                        id="qtyMinus"
+                    >
+
+                        −
+
+                    </button>
+
+
+                    <input
+                        type="number"
+                        id="quantity"
+                        name="quantity"
+                        value="1"
+                        min="1"
+                        max="99"
+                    >
+
+
+                    <button
+                        type="button"
+                        id="qtyPlus"
+                    >
+
+                        +
+
+                    </button>
+
+
+                </div>
+
+
+                <input
+                    type="hidden"
+                    name="product_id"
+                    value="<?= (int)$product['id'] ?>"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="name"
+                    value="<?= htmlspecialchars($product['proname']) ?>"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="price"
+                    value="<?= htmlspecialchars($product['proprice']) ?>"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="img"
+                    value="<?= htmlspecialchars($product['proimg']) ?>"
+                >
+
+
+                <button
+                    type="submit"
+                    name="add"
+                    class="details-cart-btn"
+                >
+
+                    🛒 إضافة إلى خدماتي
+
+                </button>
+
+
+            </form>
+
+
+        </div>
+
     </div>
 
-    <div class="comment_info">
-        <h5>قيم الخدمة</h5>
-        <form action="" method="post">
-            <textarea name="comment" placeholder="قيم من فضلك الخدمة"></textarea>
-            <button class="add_comment" type="submit" name="add_comment">ارسال</button>
-        </form>
 
-        
-       
 
-        <h5>تقييمات العملاء</h5>
-        
-        <div class="comments">
+    <!-- =================================================
+         الخدمات الحديثة
+    ================================================== -->
+
+    <div class="recent-services">
+
+
+        <h2 class="section-title">
+
+            خدمات قد تهمك
+
+        </h2>
+
+
+        <div class="recent-grid">
+
+
             <?php
-            $query = "SELECT * FROM comments ORDER BY id DESC LIMIT 10";
-            $result = mysqli_query($con, $query);
-            while($comment = mysqli_fetch_assoc($result)){
-                 echo '<div class="usename">تقيم بواسطة:&nbsp;'.$comment['usename'].'</div>';
-                echo '<div class="comment">'.$comment['comment'].'</div>';
-            }
-            // معالجة التعليقات
-if(isset($_GET['add_comment'])){
-    $comment = trim($_POST['comment']);
-    if(!empty($comment)){
-        $query = "INSERT INTO comments(comment) VALUES ('$comment')";
-        mysqli_query($con, $query);
-        echo '<script>alert("تم إضافة تعليقك بنجاح");</script>';
-    } else {
-        echo '<script>alert("الرجاء ملء الحقل");</script>';
-    }
-}
- 
+
+            $recentStmt = $con->prepare("
+                SELECT id, proname, proimg
+                FROM product
+                WHERE id != ?
+                ORDER BY id DESC
+                LIMIT 5
+            ");
+
+            $recentStmt->bind_param("i",$id);
+
+            $recentStmt->execute();
+
+            $recentResult = $recentStmt->get_result();
+
+
+            while($recent = $recentResult->fetch_assoc()){
 
             ?>
+
+
+                <a
+                    class="recent-item"
+                    href="detalis.php?id=<?= (int)$recent['id'] ?>"
+                >
+
+
+                    <img
+                        src="uploads/img/<?= htmlspecialchars($recent['proimg']) ?>"
+                        alt="<?= htmlspecialchars($recent['proname']) ?>"
+                    >
+
+
+                    <div class="recent-name">
+
+                        <?= htmlspecialchars($recent['proname']) ?>
+
+                    </div>
+
+
+                </a>
+
+
+            <?php } ?>
+
+
         </div>
+
     </div>
-</main>
+
+
+
+    <!-- =================================================
+         التقييمات
+    ================================================== -->
+
+    <div class="reviews-section">
+
+
+        <h2 class="section-title">
+
+            ⭐ تقييم الخدمة
+
+        </h2>
+
+
+        <?php if($comment_success): ?>
+
+            <div class="review-success">
+
+                <?= htmlspecialchars($comment_success) ?>
+
+            </div>
+
+        <?php endif; ?>
+
+
+        <?php if($comment_error): ?>
+
+            <div class="review-error">
+
+                <?= htmlspecialchars($comment_error) ?>
+
+            </div>
+
+        <?php endif; ?>
+
+
+        <form
+            method="POST"
+            class="review-form"
+        >
+
+
+            <textarea
+                name="comment"
+                placeholder="اكتب تقييمك للخدمة..."
+            ></textarea>
+
+
+            <button
+                type="submit"
+                name="add_comment"
+            >
+
+                إرسال التقييم
+
+            </button>
+
+
+        </form>
+
+
+        <!-- التقييمات الموجودة -->
+
+        <div class="reviews-list">
+
+
+            <?php
+
+            $commentsResult = mysqli_query(
+                $con,
+                "
+                SELECT usename, comment
+                FROM comments
+                ORDER BY id DESC
+                LIMIT 10
+                "
+            );
+
+
+            if(
+                $commentsResult
+                &&
+                mysqli_num_rows($commentsResult) > 0
+            ){
+
+                while(
+                    $comment = mysqli_fetch_assoc($commentsResult)
+                ){
+
+            ?>
+
+
+                <div class="review">
+
+
+                    <div class="review-user">
+
+                        👤
+                        <?= htmlspecialchars($comment['usename'] ?? 'عميل') ?>
+
+                    </div>
+
+
+                    <div class="review-text">
+
+                        <?= nl2br(htmlspecialchars($comment['comment'])) ?>
+
+                    </div>
+
+
+                </div>
+
+
+            <?php
+
+                }
+
+            }else{
+
+            ?>
+
+                <p style="color:#777;">
+
+                    لا توجد تقييمات حتى الآن.
+
+                </p>
+
+            <?php } ?>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   التحكم بالكمية
+===================================================== */
+
+const quantityInput = document.getElementById('quantity');
+
+const minusButton = document.getElementById('qtyMinus');
+
+const plusButton = document.getElementById('qtyPlus');
+
+
+minusButton.addEventListener('click', function(){
+
+    let value = parseInt(quantityInput.value) || 1;
+
+    if(value > 1){
+
+        quantityInput.value = value - 1;
+
+    }
+
+});
+
+
+plusButton.addEventListener('click', function(){
+
+    let value = parseInt(quantityInput.value) || 1;
+
+    if(value < 99){
+
+        quantityInput.value = value + 1;
+
+    }
+
+});
+
+</script>
+
+
+<?php include('file/foter.php'); ?>

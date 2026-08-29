@@ -1,160 +1,409 @@
-
 <?php
- session_start();
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+session_start();
+
 include('../include/core.php');
 include('../include/connected.php');
 
 if(isset($_POST['proadd'])){
 
-    $proname    = mysqli_real_escape_string($con, $_POST['proname']);
-    $proprice   = mysqli_real_escape_string($con, $_POST['proprice']);
-    $prosection = mysqli_real_escape_string($con, $_POST['prosection']);
-    $prodescrip = mysqli_real_escape_string($con, $_POST['prodescrip']);
-    $prounv     = mysqli_real_escape_string($con, $_POST['prounv']);
+    $proname     = trim($_POST['proname']);
+    $proprice    = trim($_POST['proprice']);
+    $prosection  = trim($_POST['prosection']);
+    $prodescrip  = trim($_POST['prodescrip']);
+    $prounv      = trim($_POST['prounv']);
 
-    // 📸 الصورة
-    $imgname = $_FILES['proimg']['name'];
-    $tmp     = $_FILES['proimg']['tmp_name'];
-    $size    = $_FILES['proimg']['size'];
+    if(empty($proname) || empty($proprice) || empty($prosection)){
 
-    $allowed = ['jpg','jpeg','png','gif'];
-    $ext = strtolower(pathinfo($imgname, PATHINFO_EXTENSION));
+        $_SESSION['msg']="يرجى تعبئة جميع الحقول";
 
-    if(empty($proname) || empty($proprice) || empty($prosection) || empty($prodescrip)){
-         echo "<script>alert('".t('fill_fields')."');</script>";
-    }
-    elseif(!in_array($ext, $allowed)){
-         echo "<script>alert('".t('image_error')."');</script>";
-    }
-    elseif($size > 2*1024*1024){
-        echo "<script>alert('".t('image_size')."');</script>";
-    }
-    else{
+    }else{
 
-        $newName = time() . "_" . $imgname;
-        move_uploaded_file($tmp, "../uploads/img/".$newName);
+        $image="";
 
-        $query = "INSERT INTO product 
-        (proname, proimg, proprice, prosection, prodescrip, prounv)
-        VALUES 
-        ('$proname','$newName','$proprice','$prosection','$prodescrip','$prounv')";
+        if(isset($_FILES['proimg']) && $_FILES['proimg']['error']==0){
 
-        if(mysqli_query($con,$query)){
-           echo "<script>alert('".t('success')."');</script>";
-        }else{
-            echo "<script>alert('".t('error')."');</script>";
+            $ext=strtolower(pathinfo($_FILES['proimg']['name'],PATHINFO_EXTENSION));
+
+            $allow=['jpg','jpeg','png','gif','webp'];
+
+            if(in_array($ext,$allow)){
+
+                $image=time().'_'.rand(1000,9999).".".$ext;
+
+                move_uploaded_file(
+                    $_FILES['proimg']['tmp_name'],
+                    "../uploads/img/".$image
+                );
+
+            }
+
         }
+
+        $stmt=$con->prepare("
+        INSERT INTO product
+        (
+            proname,
+            proimg,
+            proprice,
+            prosection,
+            prodescrip,
+            prounv
+        )
+        VALUES
+        (?,?,?,?,?,?)
+        ");
+
+        $stmt->bind_param(
+        "ssssss",
+        $proname,
+        $image,
+        $proprice,
+        $prosection,
+        $prodescrip,
+        $prounv
+        );
+
+        if($stmt->execute()){
+
+            $_SESSION['success']="تم إضافة الخدمة بنجاح";
+
+            header("Location: services.php");
+
+            exit();
+
+        }else{
+
+            $_SESSION['msg']="حدث خطأ أثناء الحفظ";
+
+        }
+
     }
+
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
+<!doctype html>
+<html lang="<?= $lang ?>" dir="<?= $lang=="ar"?"rtl":"ltr" ?>">
 <head>
-<meta charset="UTF-8">
-<title><?= t('add_service') ?></title>
+
+<meta charset="utf-8">
+
+<title>إضافة خدمة</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
 <style>
+
 body{
-    font-family: 'Cairo';
-    background:#f4f6f9;
+background:#f4f6f9;
 }
 
-.form_product{
-    width: 50%;
-    margin: 40px auto;
-    padding: 20px;
-    background:#fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-radius:10px;
+.header{
+background:linear-gradient(135deg,#0d6efd,#0048b3);
+padding:25px;
+border-radius:18px;
+color:#fff;
+margin-bottom:25px;
+box-shadow:0 10px 25px rgba(0,0,0,.12);
 }
 
-h1{
-    text-align:center;
+.card{
+border:none;
+border-radius:18px;
+box-shadow:0 5px 20px rgba(0,0,0,.1);
 }
 
-label{
-    display:block;
-    margin-top:10px;
+.upload-box{
+border:2px dashed #0d6efd;
+border-radius:15px;
+padding:25px;
+text-align:center;
+cursor:pointer;
+transition:.3s;
 }
 
-input, select{
-    width:100%;
-    padding:10px;
-    margin-top:5px;
-    border:1px solid #ccc;
-    border-radius:5px;
+.upload-box:hover{
+background:#eef5ff;
 }
 
-.button{
-    width: 100%;
-    margin-top: 20px;
-    padding: 14px;
-    background: linear-gradient(135deg, #4CAF50, #2ecc71);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+#preview{
+max-width:220px;
+display:none;
+margin:auto;
+border-radius:12px;
+margin-top:15px;
 }
 
-.button:hover{
-    background: linear-gradient(135deg, #43a047, #27ae60);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-}
-
-.button:active{
-    transform: scale(0.97);
-}
 </style>
-
 </head>
+
 <body>
 
-<a href="?lang=ar">🇸🇦 عربي</a>
-<a href="?lang=en">🇬🇧 English</a>
+<div class="container py-4">
 
-<div class="form_product">
-<h1><?= t('add_service') ?></h1>
+<div class="header">
 
-<form method="post" enctype="multipart/form-data">
+<h2>
 
-<label><?= t('service_title') ?></label>
-<input type="text" name="proname">
+<i class="bi bi-box-seam"></i>
 
-<label><?= t('service_image') ?></label>
-<input type="file" name="proimg">
+إضافة خدمة جديدة
 
-<label><?= t('price') ?></label>
-<input type="text" name="proprice">
+</h2>
 
-<label><?= t('details') ?></label>
-<input type="text" name="prodescrip">
+<p class="mb-0">
 
-<label><?= t('availability') ?></label>
-<input type="text" name="prounv">
+منصة الشرق الذكية للخدمات وإدارة الأسطول
 
-<label><?= t('section') ?></label>
-<select name="prosection">
-<?php
-$res = mysqli_query($con,"SELECT * FROM section");
-while($row = mysqli_fetch_assoc($res)){
-    echo "<option value='".$row['sectionname']."'>".$row['sectionname']."</option>";
-}
-?>
-</select>
+</p>
 
-<button class="button" name="proadd"><?= t('add') ?></button>
+</div>
+<?php if(isset($_SESSION['msg'])){ ?>
 
-</form>
+<div class="alert alert-danger">
+
+<?= $_SESSION['msg']; ?>
+
 </div>
 
-</body>
-</html>
+<?php unset($_SESSION['msg']); } ?>
 
+<?php if(isset($_SESSION['success'])){ ?>
+
+<div class="alert alert-success">
+
+<?= $_SESSION['success']; ?>
+
+</div>
+
+<?php unset($_SESSION['success']); } ?>
+
+<div class="card">
+
+<div class="card-body">
+
+<form method="POST" enctype="multipart/form-data">
+
+<div class="row">
+
+<div class="col-md-8">
+
+<label class="form-label">
+
+اسم الخدمة
+
+</label>
+
+<input
+type="text"
+name="proname"
+class="form-control"
+required>
+
+</div>
+
+<div class="col-md-4">
+
+<label class="form-label">
+
+السعر
+
+</label>
+
+<input
+type="number"
+step="0.01"
+name="proprice"
+class="form-control"
+required>
+
+</div>
+
+<div class="col-md-6 mt-3">
+
+<label class="form-label">
+
+القسم
+
+</label>
+
+<select
+name="prosection"
+class="form-select"
+required>
+
+<option value="">اختر القسم</option>
+
+<?php
+
+$res=mysqli_query($con,"SELECT * FROM section ORDER BY sectionname");
+
+while($sec=mysqli_fetch_assoc($res)){
+
+?>
+
+<option value="<?= $sec['sectionname'] ?>">
+
+<?= $sec['sectionname'] ?>
+
+</option>
+
+<?php } ?>
+
+</select>
+
+</div>
+
+<div class="col-md-6 mt-3">
+
+<label class="form-label">
+
+توفر الخدمة
+
+</label>
+
+<select
+name="prounv"
+class="form-select">
+
+<option value="متوفر">
+
+متوفر
+
+</option>
+
+<option value="غير متوفر">
+
+غير متوفر
+
+</option>
+
+</select>
+
+</div>
+
+<div class="col-md-12 mt-3">
+
+<label class="form-label">
+
+تفاصيل الخدمة
+
+</label>
+
+<textarea
+name="prodescrip"
+rows="5"
+class="form-control"
+required>
+
+</textarea>
+
+</div>
+
+<div class="col-md-12 mt-4">
+
+<label class="form-label">
+
+صورة الخدمة
+
+</label>
+
+<div
+class="upload-box"
+onclick="document.getElementById('proimg').click()">
+
+<i class="bi bi-cloud-arrow-up"
+style="font-size:60px;color:#0d6efd"></i>
+
+<h5 class="mt-3">
+
+اضغط لاختيار الصورة
+
+</h5>
+
+<p>
+
+JPG - PNG - WEBP
+
+</p>
+
+<input
+type="file"
+name="proimg"
+id="proimg"
+accept="image/*"
+hidden>
+
+<img
+id="preview">
+
+</div>
+
+</div>
+
+<div class="col-md-12 mt-4 text-center">
+
+<button
+class="btn btn-success btn-lg"
+name="proadd">
+
+<i class="bi bi-check-circle"></i>
+
+حفظ الخدمة
+
+</button>
+
+<a
+href="products.php"
+class="btn btn-secondary btn-lg">
+
+رجوع
+
+</a>
+
+</div>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+document
+.getElementById("proimg")
+.onchange=function(e){
+
+const file=e.target.files[0];
+
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(){
+
+document
+.getElementById("preview")
+.src=reader.result;
+
+document
+.getElementById("preview")
+.style.display="block";
+
+}
+
+reader.readAsDataURL(file);
+
+}
+
+</script>
+
+</body>
+
+</html>

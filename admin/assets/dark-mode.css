@@ -1,0 +1,146 @@
+/* =========================
+DARK MODE
+========================= */
+
+body.dark-mode{
+    background:#121212 !important;
+    color:#fff !important;
+    
+}
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #2b2b2b;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+body.dark-mode input::placeholder {
+    color: #aaa;
+}
+body.dark-mode {
+    color: #fff;
+}
+
+body.dark-mode label,
+body.dark-mode span,
+body.dark-mode p,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode td,
+body.dark-mode th {
+    color: #fff !important;
+}
+
+/* الكروت */
+
+body.dark-mode .card,
+body.dark-mode .box,
+body.dark-mode .content,
+body.dark-mode .table-box,
+body.dark-mode .profile-card{
+    background:#1e1e1e !important;
+    color:#fff !important;
+}
+
+/* الحقول */
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select{
+    background:#2a2a2a !important;
+    color:#fff !important;
+    border:1px solid #444 !important;
+}
+
+/* الجدول */
+
+body.dark-mode table{
+    background:#1e1e1e !important;
+    color:#fff !important;
+}
+
+/* رؤوس الجدول */
+
+body.dark-mode th{
+    background:#222 !important;
+    color:#fff !important;
+}
+
+/* الصفوف */
+
+body.dark-mode tr{
+    background:#1e1e1e !important;
+}
+
+/* الصفوف الفردية */
+
+body.dark-mode tr:nth-child(even){
+    background:#2a2a2a !important;
+}
+
+/* البيانات */
+
+body.dark-mode td{
+    color:#fff !important;
+    border-color:#444 !important;
+}
+
+/* النصوص داخل الجدول */
+
+body.dark-mode td p,
+body.dark-mode td span,
+body.dark-mode td a{
+    color:#fff !important;
+}
+
+/* الروابط */
+
+body.dark-mode a{
+    color:#fff !important;
+}
+
+/* القائمة */
+
+body.dark-mode .sidebar{
+    background:#1a1a1a !important;
+}
+
+/* الهيدر */
+
+body.dark-mode .navbar,
+body.dark-mode .header{
+    background:#1e1e1e !important;
+}
+
+/* الأزرار */
+
+body.dark-mode button{
+    opacity:.95;
+}
+
+/* النصوص */
+
+body.dark-mode p,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6,
+body.dark-mode span,
+body.dark-mode label{
+    color:#fff !important;
+}
+
+.dark-btn{
+    background:#111;
+    color:#fff;
+    border:none;
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:18px;
+}

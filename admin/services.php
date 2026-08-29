@@ -1,188 +1,640 @@
-
 <?php
 session_start();
+
 include('../include/core.php');
 include('../include/connected.php');
+include('../include/settings.php');
 
-/* 🔍 البحث */
-$search = $_GET['search'] ?? '';
-
-if ($search != '') {
-    $search_safe = mysqli_real_escape_string($con, $search);
-    $query = "SELECT * FROM product 
-              WHERE proname LIKE '%$search_safe%' 
-              OR prosection LIKE '%$search_safe%'";
-} else {
-    $query = "SELECT * FROM product";
-}
-
-$result = mysqli_query($con, $query);
-
-/* 🗑️ حذف */
-if (isset($_GET['id'])) {
-    $id = (int) $_GET['id'];
-    mysqli_query($con, "DELETE FROM product WHERE id=$id");
-    header("Location: services.php");
+if(!isset($_SESSION['admin_id'])){
+    header("Location: admin.php");
     exit;
 }
-?>
 
+/*==============================
+بحث
+==============================*/
+
+$search = trim($_GET['search'] ?? '');
+$section = trim($_GET['section'] ?? '');
+
+$where=[];
+
+if($search!=""){
+    $s=mysqli_real_escape_string($con,$search);
+
+    $where[]="(
+    proname LIKE '%$s%'
+    OR prosection LIKE '%$s%'
+    OR prodescrip LIKE '%$s%'
+    )";
+}
+
+if($section!=""){
+
+    $sec=mysqli_real_escape_string($con,$section);
+
+    $where[]="prosection='$sec'";
+}
+
+$sql="SELECT * FROM product";
+
+if(count($where)>0){
+
+    $sql.=" WHERE ".implode(" AND ",$where);
+
+}
+
+$sql.=" ORDER BY id DESC";
+
+$result=mysqli_query($con,$sql);
+
+/*==============================
+الإحصائيات
+==============================*/
+
+$total=mysqli_fetch_assoc(mysqli_query($con,"
+SELECT COUNT(*) total
+FROM product
+"))['total'];
+
+$available=mysqli_fetch_assoc(mysqli_query($con,"
+SELECT COUNT(*) total
+FROM product
+WHERE prounv='متوفر'
+"))['total'];
+
+$unavailable=mysqli_fetch_assoc(mysqli_query($con,"
+SELECT COUNT(*) total
+FROM product
+WHERE prounv<>'متوفر'
+"))['total'];
+
+$sections=mysqli_fetch_assoc(mysqli_query($con,"
+SELECT COUNT(DISTINCT prosection) total
+FROM product
+"))['total'];
+
+?>
 <!DOCTYPE html>
-<html lang="<?= $lang ?>" dir="<?= $lang == 'ar' ? 'rtl' : 'ltr' ?>">
+
+<html lang="<?= $lang ?>"
+dir="<?= $lang=="ar"?"rtl":"ltr" ?>">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= __('Service management') ?></title>
+
+<meta charset="utf-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>
+
+<?= setting('system_name') ?>
+
+| إدارة الخدمات
+
+</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
 <style>
-body {
-    font-family: 'Cairo', sans-serif;
-    background: #f4f6f9;
-    margin: 0;
+
+body{
+
+background:#eef2f7;
+
+font-family:Cairo,Tahoma;
+
 }
 
-/* 🔍 البحث */
-.search-box {
-    text-align: center;
-    margin: 20px;
+.top-box{
+
+background:linear-gradient(135deg,#0d6efd,#003b8f);
+
+color:#fff;
+
+padding:25px;
+
+border-radius:18px;
+
+margin-bottom:25px;
+
+box-shadow:0 15px 30px rgba(0,0,0,.15);
+
 }
 
-.search-box input {
-    width: 300px;
-    padding: 10px;
-    border-radius: 25px;
-    border: 1px solid #ccc;
+.logo{
+
+width:70px;
+
+height:70px;
+
+border-radius:50%;
+
+background:#fff;
+
+padding:5px;
+
+object-fit:cover;
+
 }
 
-.search-box button {
-    padding: 10px 15px;
-    border: none;
-    background: #3498db;
-    color: white;
-    border-radius: 20px;
-    cursor: pointer;
+.stat-card{
+
+border:none;
+
+border-radius:18px;
+
+padding:20px;
+
+box-shadow:0 10px 20px rgba(0,0,0,.08);
+
+transition:.3s;
+
 }
 
-/* 📊 الجدول */
-table {
-    width: 95%;
-    margin: auto;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+.stat-card:hover{
+
+transform:translateY(-5px);
+
 }
 
-th {
-    background: #2c3e50;
-    color: white;
-    padding: 12px;
+.table-box{
+
+background:#fff;
+
+border-radius:18px;
+
+padding:20px;
+
+box-shadow:0 8px 18px rgba(0,0,0,.08);
+
 }
 
-td {
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #eee;
+.service-img{
+
+width:70px;
+
+height:70px;
+
+border-radius:12px;
+
+object-fit:cover;
+
 }
 
-tr:nth-child(even){
-    background: #f9f9f9;
+.badge-ok{
+
+background:#16a34a;
+
 }
 
-tr:hover{
-    background: #eef5ff;
+.badge-no{
+
+background:#dc2626;
+
 }
 
-/* 🖼️ الصور */
-img {
-    width: 70px;
-    height: 70px;
-    border-radius: 6px;
-    object-fit: cover;
+.action-btn{
+
+margin:2px;
+
 }
 
-/* 🔘 الأزرار */
-.delete {
-    background: #e74c3c;
-    color: white;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.search-box{
+
+background:#fff;
+
+padding:20px;
+
+border-radius:18px;
+
+margin-bottom:20px;
+
+box-shadow:0 8px 18px rgba(0,0,0,.08);
+
 }
 
-.update {
-    background: #27ae60;
-    color: white;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
 </style>
+
 </head>
 
 <body>
-<a href="?lang=ar">🇸🇦 عربي</a>
-<a href="?lang=en">🇬🇧 English</a>
-<!-- 🔍 البحث -->
-<div class="search-box">
-<form method="GET">
-<input type="text" name="search" placeholder="Looking for a service..." value="<?php echo htmlspecialchars($search); ?>">
-<button type="submit"><?= __('search') ?></button>
-</form>
+
+<div class="container-fluid p-4">
+
+<div class="top-box">
+
+<div class="d-flex justify-content-between align-items-center">
+
+<div class="d-flex align-items-center">
+
+<?php if(setting('company_logo')){ ?>
+
+<img
+src="../uploads/logo/<?= setting('company_logo')?>"
+class="logo ms-3">
+
+<?php } ?>
+
+<div>
+
+<h2 class="mb-1">
+
+<?= setting('system_name') ?>
+
+</h2>
+
+<p class="mb-0">
+
+إدارة الخدمات
+
+</p>
+
 </div>
 
-<!-- 📊 الجدول -->
-<table dir="rtl">
-<thead>
+</div>
+
+<div>
+
+<a href="addproduct.php"
+class="btn btn-light btn-lg">
+
+<i class="bi bi-plus-circle"></i>
+
+إضافة خدمة
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+<div class="row mb-4">
+
+<div class="col-lg-3 col-md-6 mb-3">
+
+<div class="stat-card bg-white">
+
+<h6 class="text-muted">إجمالي الخدمات</h6>
+
+<h2 class="fw-bold text-primary">
+
+<?= $total ?>
+
+</h2>
+
+<i class="bi bi-box-seam fs-1 text-primary"></i>
+
+</div>
+
+</div>
+
+<div class="col-lg-3 col-md-6 mb-3">
+
+<div class="stat-card bg-white">
+
+<h6 class="text-muted">
+
+الخدمات المتوفرة
+
+</h6>
+
+<h2 class="fw-bold text-success">
+
+<?= $available ?>
+
+</h2>
+
+<i class="bi bi-check-circle-fill fs-1 text-success"></i>
+
+</div>
+
+</div>
+
+<div class="col-lg-3 col-md-6 mb-3">
+
+<div class="stat-card bg-white">
+
+<h6 class="text-muted">
+
+الخدمات غير المتوفرة
+
+</h6>
+
+<h2 class="fw-bold text-danger">
+
+<?= $unavailable ?>
+
+</h2>
+
+<i class="bi bi-x-circle-fill fs-1 text-danger"></i>
+
+</div>
+
+</div>
+
+<div class="col-lg-3 col-md-6 mb-3">
+
+<div class="stat-card bg-white">
+
+<h6 class="text-muted">
+
+عدد الأقسام
+
+</h6>
+
+<h2 class="fw-bold text-warning">
+
+<?= $sections ?>
+
+</h2>
+
+<i class="bi bi-grid fs-1 text-warning"></i>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="search-box">
+
+<form method="GET">
+
+<div class="row">
+
+<div class="col-lg-5">
+
+<input
+
+type="text"
+
+name="search"
+
+class="form-control"
+
+placeholder="ابحث باسم الخدمة..."
+
+value="<?= htmlspecialchars($search) ?>">
+
+</div>
+
+<div class="col-lg-4">
+
+<select
+
+name="section"
+
+class="form-select">
+
+<option value="">
+
+كل الأقسام
+
+</option>
+
+<?php
+
+$q=mysqli_query($con,"
+SELECT DISTINCT prosection
+FROM product
+ORDER BY prosection
+");
+
+while($sec=mysqli_fetch_assoc($q)){
+
+?>
+
+<option
+
+value="<?= $sec['prosection']?>"
+
+<?= $section==$sec['prosection']?'selected':'' ?>>
+
+<?= $sec['prosection']?>
+
+</option>
+
+<?php } ?>
+
+</select>
+
+</div>
+
+<div class="col-lg-3 d-grid">
+
+<button
+
+class="btn btn-primary">
+
+<i class="bi bi-search"></i>
+
+بحث
+
+</button>
+
+</div>
+
+</div>
+
+</form>
+
+</div>
+
+<div class="table-box">
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle">
+
+<thead class="table-dark">
+
 <tr>
-<th><?= __('Serial Number') ?></th>
-<th><?= __('image') ?></th>
-<th><?= __('Service name') ?></th>
-<th><?= __('price') ?></th>
-<th><?= __('Section Name') ?></th>
-<th><?= __('details') ?></th>
-<th><?= __('status') ?></th>
-<th><?= __('delete') ?></th>
-<th><?= __('update') ?></th>
+
+<th>#</th>
+
+<th>الصورة</th>
+
+<th>الخدمة</th>
+
+<th>القسم</th>
+
+<th>السعر</th>
+
+<th>الحالة</th>
+
+<th width="240">
+
+الإجراءات
+
+</th>
+
 </tr>
+
 </thead>
 
 <tbody>
-<?php while ($row = mysqli_fetch_assoc($result)) { ?>
+
+<?php while($row=mysqli_fetch_assoc($result)){ ?>
+
 <tr>
 
-<td><?php echo $row['id']; ?></td>
-
 <td>
-<img src="../uploads/img/<?php echo $row['proimg']; ?>">
-</td>
 
-<td><?php echo $row['proname']; ?></td>
-<td><?php echo $row['proprice']; ?></td>
-<td><?php echo $row['prosection']; ?></td>
-<td><?php echo $row['prodescrip']; ?></td>
-<td><?php echo $row['prounv']; ?></td>
+<?= $row['id'] ?>
 
-<td>
-<a href="services.php?id=<?php echo $row['id']; ?>" 
-onclick="return confirm(<?= __('Are you sure about deleting it?') ?>)">
-<button class="delete"><?= __('delete') ?></button>
-</a>
 </td>
 
 <td>
-<a href="update.php?id=<?php echo $row['id']; ?>">
-<button class="update"><?= __('update') ?></button>
+
+<img
+
+src="../uploads/img/<?= $row['proimg']?>"
+
+class="service-img">
+
+</td>
+
+<td>
+
+<strong>
+
+<?= $row['proname'] ?>
+
+</strong>
+
+<br>
+
+<small class="text-muted">
+
+<?= mb_strimwidth(strip_tags($row['prodescrip']),0,60,"...") ?>
+
+</small>
+
+</td>
+
+<td>
+
+<?= $row['prosection'] ?>
+
+</td>
+
+<td>
+
+<strong class="text-success">
+
+<?= number_format($row['proprice'],2) ?>
+
+ر.س
+
+</strong>
+
+</td>
+
+<td>
+
+<?php
+
+if($row['prounv']=="متوفر"){
+
+echo '<span class="badge badge-ok">متوفر</span>';
+
+}else{
+
+echo '<span class="badge badge-no">غير متوفر</span>';
+
+}
+
+?>
+
+</td>
+
+<td>
+    <a href="service_details.php?id=<?= $row['id'] ?>"
+class="btn btn-info btn-sm action-btn">
+
+<i class="bi bi-eye-fill"></i>
+
 </a>
+
+<a href="update.php?id=<?= $row['id'] ?>"
+class="btn btn-success btn-sm action-btn">
+
+<i class="bi bi-pencil-fill"></i>
+
+</a>
+
+<a href="services.php?id=<?= $row['id'] ?>"
+class="btn btn-danger btn-sm action-btn"
+onclick="return confirm('هل أنت متأكد من حذف هذه الخدمة؟')">
+
+<i class="bi bi-trash-fill"></i>
+
+</a>
+
 </td>
 
 </tr>
+
 <?php } ?>
+
+<?php if(mysqli_num_rows($result)==0){ ?>
+
+<tr>
+
+<td colspan="7" class="text-center p-5">
+
+<img src="../img/empty.png"
+style="width:120px;opacity:.6"><br><br>
+
+<h5 class="text-muted">
+
+لا توجد خدمات
+
+</h5>
+
+</td>
+
+</tr>
+
+<?php } ?>
+
 </tbody>
 
 </table>
 
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+document.querySelectorAll(".table tbody tr").forEach(function(row){
+
+row.addEventListener("mouseenter",function(){
+
+this.style.transition=".2s";
+
+this.style.transform="scale(1.01)";
+
+});
+
+row.addEventListener("mouseleave",function(){
+
+this.style.transform="scale(1)";
+
+});
+
+});
+
+</script>
+
 </body>
+
 </html>
-```

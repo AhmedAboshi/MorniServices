@@ -2,286 +2,345 @@
 session_start();
 include('../include/connected.php');
 
+$lang = $_SESSION['lang'] ?? 'ar';
+$dark = isset($_GET['dark']);
 
+$sql = "
+SELECT
+    t.*,
+    f.plate,
+    t.driver AS driver_name
+FROM tires t
+LEFT JOIN fleet f ON t.car_id = f.id
+ORDER BY t.id DESC
+";
 
-/* =========================
-   🗑️ حذف
-========================= */
-if(isset($_POST['delete_id'])){
-    $id = (int) $_POST['delete_id'];
+$res = $con->query($sql);
 
-    $stmt = $con->prepare("DELETE FROM tires WHERE id=?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
+$data=[];
+$late=0;
+$soon=0;
+$ok=0;
 
-    header("Location: tire.php");
-    exit();
-}
+while($row=$res->fetch_assoc()){
 
-/* =========================
-   ✏️ جلب للتعديل
-========================= */
-$edit_row = null;
+    $daysLeft = ceil(
+        (strtotime($row['next_change']) - time())
+        /86400
+    );
 
-if(isset($_GET['edit'])){
-    $id = (int) $_GET['edit'];
-
-    $stmt = $con->prepare("SELECT * FROM tires WHERE id=?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-
-    $edit_row = $stmt->get_result()->fetch_assoc();
-}
-
-/* =========================
-   💾 حفظ (إضافة / تعديل)
-========================= */
-if(isset($_POST['save'])){
-
-    $id = (int) ($_POST['id'] ?? 0);
-    $driver_id = (int)$_POST['driver_id'];
-    $car_id = trim($_POST['car_id']);
-    $tire_type = trim($_POST['tire_type']);
-    $change_date = $_POST['change_date'];
-    $notes = trim($_POST['notes']);
-    $cost = (float) $_POST['cost'];
-
-    if($id > 0){
-
-        // تحديث
-        $stmt = $con->prepare("UPDATE tires SET 
-            driver_id=?,
-            car_id=?,
-            tire_type=?,
-            change_date=?,
-            notes=?,
-            cost=?
-            WHERE id=?");
-
-        $stmt->bind_param(
-            "issssdi",
-            $driver_id,
-            $car_id,
-            $tire_type,
-            $change_date,
-            $notes,
-            $cost,
-            $id
-        );
-
-    } else {
-
-        // إضافة
-        $stmt = $con->prepare("INSERT INTO tires 
-        (driver_id, car_id, tire_type, change_date, notes, cost)
-        VALUES (?, ?, ?, ?, ?, ?)");
-
-        $stmt->bind_param(
-            "issssd",
-            $driver_id,
-            $car_id,
-            $tire_type,
-            $change_date,
-            $notes,
-            $cost
-        );
+    if($daysLeft < 0){
+        $late++;
+    }
+    elseif($daysLeft <= 30){
+        $soon++;
+    }
+    else{
+        $ok++;
     }
 
-    $stmt->execute();
-
-    header("Location: tire.php?success=1");
-    exit();
+    $data[]=$row;
 }
 
-/* =========================
-   👤 جلب السائقين
-========================= */
-$drivers = mysqli_query($con, "SELECT id, name FROM drivers");
-
-/* =========================
-   📊 عرض (JOIN)
-========================= */
-$result = mysqli_query($con, "
-SELECT tires.*, drivers.name AS driver_name
-FROM tires
-LEFT JOIN drivers ON tires.driver_id = drivers.id
-ORDER BY tires.id DESC
-");
+$total=count($data);
 ?>
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
+
 <meta charset="UTF-8">
+
 <title>إدارة الإطارات</title>
 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
-body {
-    font-family: Arial;
-    background: #f4f6f9;
+
+body{
+background:<?= $dark ? '#121212' : '#f4f6f9' ?>;
+color:<?= $dark ? '#fff' : '#000' ?>;
 }
 
-.form-container {
-    width: 400px;
-    margin: 30px auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
+.card{
+background:<?= $dark ? '#1f1f1f' : '#fff' ?>;
+border:none;
+border-radius:15px;
 }
 
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+.table{
+color:<?= $dark ? '#fff' : '#000' ?>;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+.stat{
+padding:20px;
+border-radius:15px;
+color:#fff;
+font-size:18px;
+font-weight:bold;
 }
 
-button:hover {
-    background: #0056b3;
-}
-
-.table-container {
-    width: 95%;
-    margin: 30px auto;
-}
-
-table {
-    width: 100%;
-    background: white;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 10px;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-th {
-    background: #007bff;
-    color: white;
-}
-
-.edit {
-    background: green;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    text-decoration: none;
-}
-
-.delete {
-    background: red;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-}
-
-.success {
-    text-align:center;
-    color: green;
-    font-weight:bold;
-}
 </style>
 
 </head>
+
 <body>
 
-<div class="form-container">
+<div class="container-fluid mt-4">
+
+<div class="d-flex justify-content-between mb-4">
 
 <h2>🛞 إدارة الإطارات</h2>
 
-<?php if(isset($_GET['success'])): ?>
-<p class="success">✔ تمت العملية بنجاح</p>
-<?php endif; ?>
+<div>
 
-<form method="post">
+<a href="?lang=ar" class="btn btn-primary btn-sm">
+AR
+</a>
 
-<input type="hidden" name="id" value="<?php echo $edit_row['id'] ?? 0; ?>">
+<a href="?lang=en" class="btn btn-secondary btn-sm">
+EN
+</a>
 
-<select name="driver_id" required>
-    <option value="">-- اختر السائق --</option>
-    <?php while($d = mysqli_fetch_assoc($drivers)){ ?>
-        <option value="<?= $d['id'] ?>"
-        <?= (isset($edit_row['driver_id']) && $edit_row['driver_id']==$d['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($d['name']) ?>
-        </option>
-    <?php } ?>
-</select>
+<a href="?dark=1" class="btn btn-dark btn-sm">
+🌙
+</a>
 
-<input type="text" name="car_id" placeholder="رقم السيارة"
-value="<?php echo htmlspecialchars($edit_row['car_id'] ?? ''); ?>" required>
-
-<input type="text" name="tire_type" placeholder="نوع الإطار"
-value="<?php echo htmlspecialchars($edit_row['tire_type'] ?? ''); ?>" required>
-
-<input type="date" name="change_date"
-value="<?php echo $edit_row['change_date'] ?? ''; ?>" required>
-
-<input type="number" step="0.01" name="cost" placeholder="التكلفة"
-value="<?php echo $edit_row['cost'] ?? ''; ?>" required>
-
-<textarea name="notes" placeholder="ملاحظات"><?php echo htmlspecialchars($edit_row['notes'] ?? ''); ?></textarea>
-
-<button name="save">
-<?php echo $edit_row ? "تحديث" : "إضافة"; ?>
-</button>
-
-</form>
+<a href="tire.php" class="btn btn-light btn-sm">
+☀
+</a>
 
 </div>
 
-<div class="table-container">
+</div>
 
-<table>
+<!-- الإحصائيات -->
+
+<div class="row mb-4">
+
+<div class="col-md-3">
+<div class="stat bg-primary">
+الإجمالي
+<br>
+<h3><?= $total ?></h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat bg-danger">
+متأخر
+<br>
+<h3><?= $late ?></h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat bg-warning">
+قريب
+<br>
+<h3><?= $soon ?></h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat bg-success">
+ممتاز
+<br>
+<h3><?= $ok ?></h3>
+</div>
+</div>
+
+</div>
+
+<!-- البحث -->
+
+<div class="card p-3 mb-3">
+
+<input
+type="text"
+id="search"
+class="form-control"
+placeholder="بحث ..."
+>
+
+</div>
+
+<!-- زر الإضافة -->
+
+<a href="add_tire.php"
+class="btn btn-success mb-3">
+
+➕ إضافة إطار
+
+</a>
+
+<!-- الجدول -->
+
+<div class="card p-3">
+
+<table
+class="table table-bordered table-hover text-center align-middle"
+id="table">
+
+<thead class="table-dark">
+
 <tr>
-    <th>السائق</th>
-    <th>السيارة</th>
-    <th>نوع الإطار</th>
-    <th>التاريخ</th>
-    <th>التكلفة</th>
-    <th>ملاحظات</th>
-    <th>إجراءات</th>
+
+<th>ID</th>
+<th>السائق</th>
+<th>اللوحة</th>
+<th>نوع الإطار</th>
+<th>مكان الإطار</th>
+<th>آخر تغيير</th>
+<th>التغيير القادم</th>
+<th>التكلفة</th>
+<th>الملاحظات</th>
+<th>المتبقي</th>
+<th>الحالة</th>
+<th>العمليات</th>
+
 </tr>
 
-<?php while($row = mysqli_fetch_assoc($result)){ ?>
+</thead>
+
+<tbody>
+
+<?php foreach($data as $row):
+
+$daysLeft = ceil(
+(strtotime($row['next_change'])-time())
+/86400
+);
+
+if($daysLeft < 0){
+
+$status='متأخر';
+$badge='danger';
+
+}elseif($daysLeft <=30){
+
+$status='قريب';
+$badge='warning';
+
+}else{
+
+$status='ممتاز';
+$badge='success';
+
+}
+
+?>
 
 <tr>
-    <td><?php echo htmlspecialchars($row['driver_name']); ?></td>
-    <td><?php echo htmlspecialchars($row['car_id']); ?></td>
-    <td><?php echo htmlspecialchars($row['tire_type']); ?></td>
-    <td><?php echo htmlspecialchars($row['change_date']); ?></td>
-    <td><?php echo htmlspecialchars($row['cost']); ?></td>
-    <td><?php echo htmlspecialchars($row['notes']); ?></td>
 
-    <td>
-        <a class="edit" href="?edit=<?php echo $row['id']; ?>">تعديل</a>
+<td><?= $row['id'] ?></td>
 
-        <form method="post" style="display:inline;">
-            <input type="hidden" name="delete_id" value="<?php echo $row['id']; ?>">
-            <button class="delete" onclick="return confirm('متأكد من الحذف؟')">حذف</button>
-        </form>
-    </td>
+<td>
+    <?= htmlspecialchars($row['driver_name'] ?? 'بدون سائق') ?>
+</td>
+
+<td><?= $row['plate'] ?></td>
+
+<td><?= $row['tire_type'] ?></td>
+
+<td>
+    <?= htmlspecialchars($row['tire_position'] ?? '-') ?>
+</td>
+
+<td><?= $row['change_date'] ?></td>
+
+<td><?= $row['next_change'] ?></td>
+
+<td>
+<?= number_format($row['cost'],2) ?>
+ريال
+</td>
+<td>
+    <?= !empty($row['notes'])
+        ? htmlspecialchars($row['notes'])
+        : 'لا توجد ملاحظات'
+    ?>
+</td>
+
+<td>
+
+<?= $daysLeft < 0
+? 'منتهي'
+: $daysLeft.' يوم'
+?>
+
+</td>
+
+<td>
+
+<span class="badge bg-<?= $badge ?>">
+<?= $status ?>
+</span>
+
+</td>
+
+<td>
+
+<a
+href="edit_tire.php?id=<?= $row['id'] ?>"
+class="btn btn-warning btn-sm">
+✏
+</a>
+
+<a
+href="delete_tire.php?id=<?= $row['id'] ?>"
+class="btn btn-danger btn-sm"
+onclick="return confirm('حذف السجل؟')">
+🗑
+</a>
+
+<a
+href="tire_details.php?id=<?= $row['id'] ?>"
+class="btn btn-info btn-sm">
+👁
+</a>
+
+</td>
+
 </tr>
 
-<?php } ?>
+<?php endforeach; ?>
+
+</tbody>
 
 </table>
 
 </div>
+
+</div>
+
+<script>
+
+document.getElementById('search')
+.addEventListener('keyup',function(){
+
+let value=this.value.toLowerCase();
+
+let rows=document.querySelectorAll(
+'#table tbody tr'
+);
+
+rows.forEach(row=>{
+
+row.style.display=
+row.innerText.toLowerCase()
+.includes(value)
+?
+''
+:
+'none';
+
+});
+
+});
+
+</script>
 
 </body>
 </html>

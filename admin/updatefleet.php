@@ -1,133 +1,349 @@
 <?php
 session_start();
 
+error_reporting(E_ALL);
+ini_set('display_errors',1);
+
+include('../include/core.php');
 include('../include/connected.php');
-?>
-<?php
-//select start
-@$id =$_GET['id'];
-if(isset($_GET['id'])){
-$query = "SELECT * FROM fleet WHERE id ='$id'";
-$result = mysqli_query($con ,$query);
-if(isset($result)){
-    $row = mysqli_fetch_assoc($result);
-    
+
+/* =========================
+   🌐 اللغة
+========================= */
+if(isset($_GET['lang'])){
+    $_SESSION['lang'] = $_GET['lang'];
 }
+
+$lang = $_SESSION['lang'] ?? 'ar';
+
+/* =========================
+   📌 جلب البيانات
+========================= */
+$id = intval($_GET['id'] ?? 0);
+
+$query = mysqli_query($con,"
+SELECT * FROM fleet
+WHERE id='$id'
+LIMIT 1
+");
+
+$row = mysqli_fetch_assoc($query);
+
+if(!$row){
+    die("المركبة غير موجودة");
 }
+
+/* =========================
+   ✏️ تعديل
+========================= */
 if(isset($_POST['update_pro'])){
-    if(isset($_GET['id_new'])){
-      @$driver=$_POST['driver'];
-@$plate=$_POST['plate'];
-@$typefleet=$_POST['typefleet'];
-@$classify=$_POST['classify'];
-@$model=$_POST['model'];
-@$colorfleet=$_POST['colorfleet'];
-@$work=$_POST['work'];
-
-@$proadd=$_POST['proadd'];
-// start imge
-@$imgname =$_FILES['imgfleet']['name'];
-@$imgeTmp =$_FILES['imgfleet']['tmp_name'];
-@$id_new = $_GET['id_new'];
-// end img  
-if(empty($driver)){
-    echo '<script>alert ("الرجاء ملئ الحقل ");</script>';
+    
+if(!isset($_POST['work']) || empty($_POST['work'])){
+    die("Work is empty");
 }
-else{
-    @$imgfleet = rand(0,5000) . "_" . $imgname;
+    $driver      = mysqli_real_escape_string($con,$_POST['driver']);
+    $plate       = mysqli_real_escape_string($con,$_POST['plate']);
+    $typefleet   = mysqli_real_escape_string($con,$_POST['typefleet']);
+    $classify    = mysqli_real_escape_string($con,$_POST['classify']);
+    $model       = mysqli_real_escape_string($con,$_POST['model']);
+    $colorfleet  = mysqli_real_escape_string($con,$_POST['colorfleet']);
+    $work        = mysqli_real_escape_string($con,$_POST['work']);
 
-    move_uploaded_file($imgeTmp, '../fleetimg/img/' . $imgfleet);
+    $operation_expiry    = $_POST['operation_expiry'];
+    $insurance_expiration_date = $_POST['insurance_expiration_date'];
+    $inspection_expiry   = $_POST['inspection_expiry'];
 
-    $query = "UPDATE  fleet  SET
-    driver = '$driver',
-    imgfleet = '$imgfleet',
-    plate = '$plate', 
-    typefleet= '$typefleet',
-    classify = '$classify',
-    model = '$model',
-colorfleet = '$colorfleet',
-work = '$work'
-    WHERE id = '$id_new'
-    ";
-$result = mysqli_query($con,$query);
-if(isset($result)){
-     echo '<script>alert ("تم تعديل بيانات المركبة بنجاح");</script>';
-     header("LOCATION:fleet.php");
-}else{
-     echo '<script>alert ("لم يتم التعديل  ");</script>';
-}
+    /* 📸 الصورة */
+    $imgfleet = $row['imgfleet'];
 
+    if(!empty($_FILES['imgfleet']['name'])){
+
+        $imgname = $_FILES['imgfleet']['name'];
+        $tmp     = $_FILES['imgfleet']['tmp_name'];
+
+        $imgfleet = time().'_'.$imgname;
+
+        move_uploaded_file(
+            $tmp,
+            "../fleetimg/img/".$imgfleet
+        );
     }
+
+    $update = mysqli_query($con,"
+    UPDATE fleet SET
+
+    driver='$driver',
+    imgfleet='$imgfleet',
+    plate='$plate',
+    typefleet='$typefleet',
+    classify='$classify',
+    model='$model',
+    colorfleet='$colorfleet',
+    work='$work',
+
+    operation_expiry='$operation_expiry',
+    insurance_expiration_date='$insurance_expiration_date',
+    inspection_expiry='$inspection_expiry'
+
+    WHERE id='$id'
+    ");
+
+    if($update){
+
+       header("Location: fleet_details.php?id=".$id."&lang=".$lang."&updated=1");
+exit();
+       
+
+    }else{
+
+        $error = mysqli_error($con);
     }
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= $lang ?>"
+dir="<?= $lang=='ar' ? 'rtl' : 'ltr' ?>">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> تعديل بيانات المركبة</title>
-    <link rel="stylesheet" href="style.css">
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>تعديل المركبة</title>
+
+<style>
+
+body{
+    font-family:'Cairo',sans-serif;
+    background:#f4f6f9;
+    margin:0;
+}
+
+.form-box{
+
+    width:50%;
+    margin:30px auto;
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    font-weight:bold;
+}
+
+input,
+select{
+
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border:1px solid #ccc;
+    border-radius:10px;
+    box-sizing:border-box;
+}
+
+img{
+    width:120px;
+    height:120px;
+    object-fit:cover;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+.button{
+
+    width:100%;
+    padding:14px;
+    margin-top:25px;
+    background:#27ae60;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:bold;
+}
+
+.button:hover{
+    background:#219150;
+}
+
+.error{
+
+    background:#ffe6e6;
+    color:red;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
+.lang-switch{
+
+    text-align:center;
+    margin-top:20px;
+}
+
+.lang-switch a{
+
+    text-decoration:none;
+    padding:8px 15px;
+    background:#eee;
+    border-radius:8px;
+    color:#333;
+    font-weight:bold;
+}
+
+.lang-switch a.active{
+
+    background:#3498db;
+    color:#fff;
+}
+
+</style>
+
 </head>
 
 <body>
-    <center>
-        <main>
-            <div class="form_product">
-            
-                <h1>تعديل بيانات المركبة</h1>
-                <form action="updatefleet.php?id_new=<?php echo $row['id'];?>" method="post" enctype="multipart/form-data">
 
-                 <label for="driver">المزود</label>
-                <input type="text" name="driver" id="name" value="<?PHP echo @$row['driver'];?>">
-            
+<div class="lang-switch">
 
-                <label for="file">صورة  السطحة</label>
-                <input type="file" name="imgfleet" id="file" value="<?PHP echo @$row['imgfleet']?>";>
+<a href="?id=<?= $id ?>&lang=ar"
+class="<?= $lang=='ar'?'active':'' ?>">
 
-                <label for="plate">لوحة السطحة </label>
-                <input type="text" name="plate" id="plate"  value="<?PHP echo @$row['plate'];?>">
+🇸🇦 عربي
 
-                <label for="typefleet">طراز المركبة</label>
-                <input type="text" name="typefleet" id="typefleet" value=" <?PHP echo @$row['typefleet'];?>">
+</a>
 
-                
+<a href="?id=<?= $id ?>&lang=en"
+class="<?= $lang=='en'?'active':'' ?>">
 
-                <label for="classify">نوع السطحة</label>
-                <input type="text" name="classify" id="classify" value="<?PHP echo @$row['classify'];?>">
+🇬🇧 English
 
-                <label for="model">موديل السطحة</label>
-                <input type="text" name="model" id="model" value="<?PHP echo @$row['model'];?>">
+</a>
 
-                <label for="colorfleet">لون السطحة</label>
-                <input type="text" name="colorfleet" id="colorfleet" value="<?PHP echo @$row['colorfleet'];?>">
+</div>
 
-                  <!------- start sectione---->
-                 <div>
-                    <label for="form_control">منطقة العمل</label>
-                    <select name="work" id="form_control" value="<?PHP echo @$row['work'];?>">
+<div class="form-box">
 
-                    <?php
-                    $query="SELECT *  FROM fleet";
-                    $result =mysqli_query($con, $query);
-    while ($row=mysqli_fetch_assoc($result)){
-        echo '<option name="work">'.$row['work'].'</option>';
-    }
-                    ?>
-                        
-                 </div><br>
-                 <br>
-                 <!------- end sectione---->
-                 <input class="button" type="submit" name="update_pro" value="UPDATE">
-                   
+<h1>🚚 تعديل بيانات المركبة</h1>
 
-</input>
-                </form>
+<?php if(isset($error)){ ?>
 
-                
-            </div>
+<div class="error">
+<?= $error ?>
+</div>
 
-</maim>
-    </center>
+<?php } ?>
+
+<form method="POST"
+enctype="multipart/form-data">
+
+<label>المزود</label>
+<input
+type="text"
+name="driver"
+value="<?= $row['driver'] ?>"
+required>
+
+<label>صورة المركبة</label>
+
+<img src="../fleetimg/img/<?= $row['imgfleet'] ?>">
+
+<input type="file" name="imgfleet">
+
+<label>لوحة المركبة</label>
+<input
+type="text"
+name="plate"
+value="<?= $row['plate'] ?>"
+required>
+
+<label>طراز المركبة</label>
+<input
+type="text"
+name="typefleet"
+value="<?= $row['typefleet'] ?>"
+required>
+
+<label>نوع المركبة</label>
+<input
+type="text"
+name="classify"
+value="<?= $row['classify'] ?>"
+required>
+
+<label>موديل المركبة</label>
+<input
+type="text"
+name="model"
+value="<?= $row['model'] ?>"
+required>
+
+<label>لون المركبة</label>
+<input
+type="text"
+name="colorfleet"
+value="<?= $row['colorfleet'] ?>">
+
+<label>منطقة العمل</label>
+
+<select name="work" id="work">
+
+<option value="الرياض">الرياض</option>
+<option value="جدة">جدة</option>
+<option value="الدمام">الدمام</option>
+
+</select>
+
+<script>
+document.getElementById('work').value = "<?= $row['work'] ?>";
+</script>
+
+<hr>
+
+<h3>📅 تواريخ الانتهاء</h3>
+
+<label>انتهاء كرت التشغيل</label>
+<input
+type="date"
+name="operation_expiry"
+value="<?= $row['operation_expiry'] ?>">
+
+<label>انتهاء التامين</label>
+<input
+type="date"
+name="insurance_expiration_date"
+value="<?= $row['insurance_expiration_date'] ?>">
+
+<label>انتهاء الفحص الدوري</label>
+<input
+type="date"
+name="inspection_expiry"
+value="<?= $row['inspection_expiry'] ?>">
+
+<button
+class="button"
+type="submit"
+name="update_pro">
+
+💾 حفظ التعديلات
+
+</button>
+
+</form>
+
+</div>
+
 </body>
 </html>

@@ -5,6 +5,13 @@ return [
     'title' => 'لوحة إدارة الطلبات',
     'home' => 'الرئيسية',
     'logout' => 'تسجيل الخروج',
+     'Update log'=> 'السجل',
+     'Notifications'=> 'الاشعارات',
+     'insuranceExpired'=>'انتهت صلاحية التأمين',
+     'inspectionExpired'=> 'انتهت صلاحية الفحص الدوري
+',
+'operationExpired' => 'كروت تشغيل منتهية',
+'Welcome back' => 'اهلا بعودتك',
 
     /* أزرار */
     'search' => 'بحث',
@@ -13,7 +20,7 @@ return [
     'update' => 'تحديث',
     'details' => 'تفاصيل',
     'actions' => 'إجراءات',
-
+    'settings'=> ' الاعدادات',
     /* الحقول */
     'customer' => 'العميل',
     'phone' => 'الهاتف',
@@ -58,7 +65,7 @@ return [
     'total' => 'الإجمالي',
 
     /* لوحة التحكم */
-    'control_panel' => 'لوحة التحكم',
+    'Control Panel - Fleet Management System' => 'لوحة التحكم - نظام إدارة الأسطول',
     'sections' => 'إدارة أقسام الموقع',
     'company_services' => 'خدمات الشركة',
     'add_service' => 'إضافة خدمة',
@@ -70,11 +77,12 @@ return [
     'add_vehicle' => 'إضافة مركبة',
 
     /* المستخدمين */
-    'add_user' => 'إضافة مستخدم',
+    'add_admin' => 'إضافة مستخدم',
 
     /* السائقين */
     'drivers_info' => 'معلومات المزودين',
     'add_driver' => 'إضافة مزود',
+    'drivers'=> 'المزودين',
 
     /* الصيانة */
     'maintenance_records' => 'صيانة المركبات',
@@ -83,7 +91,7 @@ return [
     /* الإطارات والزيت */
     'tires_management' => 'إدارة الإطارات',
     'oil_monitoring' => 'مراقبة الزيت',
-
+     'pricing'=>'ادارة الاسعار بين المدن',
     /* التقارير */
     'reports_dashboard' => 'لوحة التقارير',
 
@@ -130,8 +138,8 @@ return [
     'edit' => 'تعديل',
     'delete' => 'حذف',
     'confirm_delete' => 'هل أنت متأكد من حذف المستخدم؟',
-
-
+    'adminview' => 'عرض معلومات المستخدمين',
+     'add-accident'=> 'اضافة حادث',
     'fleet_title' => 'أسطول الشركة',
     'search_vehicle' => 'ابحث عن مركبة...',
     'search' => 'بحث',
@@ -188,8 +196,32 @@ return [
     'fill_fields' => 'يرجى تعبئة جميع الحقول',
     'invalid_email' => 'الإيميل غير صحيح',
     'success_add' => 'تمت الإضافة بنجاح',
-    'error' => 'حدث خطأ'
+    'error' => 'حدث خطأ',
 
+    'workshop' => 'مركز الاصلاح',
+    'plate_number' => 'لوحة السطحة',
+    'maintenance_type' => 'بيان الصيانة',
+    'cost' => 'التكلفة',
+    'maintenance' => 'ادخال الصيانة',
+
+    'tire_management'=> 'ادارة الاطارات',
+    'car_number'=> 'لوحة السطحة',
+    'tire_type'=> 'جهة الاطار او نوعة',
+    'notes' => 'ملاحظات',
+    'Control panel' => 'لوحة التحكم',
+    'create_order' => 'انشاء طلب',
+'tickets' => 'شكاوي العملاء',
+    'accidents'=>'عرض الحوادث',
+    'iqama'=> 'الاقامات المنتهية',
+'oil_changes' => 'تغيير الزيت',
+'changed_tires' => 'الإطارات التي تم تغييرها',
+'driver_license_expired' => 'رخص السائقين المنتهية',
+'iqama' => 'الإقامات المنتهية',
+'accidents'=> 'حوادث السائقين',
+'attendance_list' => 'سجل حضور السائقين',
+'commissions_dashboard'=> 'لوحة العمولات والمدفوعات',
+
+'services_pricing'=>'ادارة اسعار الخدمات'
 
 
 ];
